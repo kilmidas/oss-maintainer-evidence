@@ -1,0 +1,335 @@
+{
+  "schemaVersion": "1.0",
+  "generatedAt": "2026-07-19T16:21:02.153Z",
+  "status": "complete",
+  "query": {
+    "repository": {
+      "owner": "kilmidas",
+      "name": "oss-maintainer-evidence",
+      "fullName": "kilmidas/oss-maintainer-evidence"
+    },
+    "maintainer": "kilmidas",
+    "since": "2026-07-19T00:00:00.000Z",
+    "until": "2026-07-19T16:21:02.153Z",
+    "maxItems": 200
+  },
+  "repository": {
+    "owner": "kilmidas",
+    "name": "oss-maintainer-evidence",
+    "fullName": "kilmidas/oss-maintainer-evidence",
+    "description": "Generate source-linked, read-only evidence reports from public GitHub maintainer activity.",
+    "sourceUrl": "https://github.com/kilmidas/oss-maintainer-evidence",
+    "observedAt": "2026-07-19T16:21:02.153Z"
+  },
+  "activities": {
+    "releases": [
+      {
+        "id": "356382136",
+        "actor": "kilmidas",
+        "occurredAt": "2026-07-19T16:18:50.000Z",
+        "url": "https://github.com/kilmidas/oss-maintainer-evidence/releases/tag/v0.2.0",
+        "title": "oss-evidence v0.2.0",
+        "attributionRule": "release.author.login and release.published_at",
+        "type": "release"
+      },
+      {
+        "id": "356361415",
+        "actor": "kilmidas",
+        "occurredAt": "2026-07-19T14:39:44.000Z",
+        "url": "https://github.com/kilmidas/oss-maintainer-evidence/releases/tag/v0.1.0",
+        "title": "OSS Maintainer Evidence 0.1.0",
+        "attributionRule": "release.author.login and release.published_at",
+        "type": "release"
+      }
+    ],
+    "authoredPullRequests": [
+      {
+        "id": "4923424853",
+        "actor": "kilmidas",
+        "occurredAt": "2026-07-19T16:14:26.000Z",
+        "url": "https://github.com/kilmidas/oss-maintainer-evidence/pull/15",
+        "title": "Add signed-out evidence link verification",
+        "attributionRule": "pull.user.login and pull.created_at",
+        "type": "authored_pull_request"
+      },
+      {
+        "id": "4923343390",
+        "actor": "kilmidas",
+        "occurredAt": "2026-07-19T15:51:49.000Z",
+        "url": "https://github.com/kilmidas/oss-maintainer-evidence/pull/13",
+        "title": "Document ecosystem importance with audited sources",
+        "attributionRule": "pull.user.login and pull.created_at",
+        "type": "authored_pull_request"
+      },
+      {
+        "id": "4923065678",
+        "actor": "kilmidas",
+        "occurredAt": "2026-07-19T14:31:44.000Z",
+        "url": "https://github.com/kilmidas/oss-maintainer-evidence/pull/12",
+        "title": "Resolve pre-release audit findings",
+        "attributionRule": "pull.user.login and pull.created_at",
+        "type": "authored_pull_request"
+      },
+      {
+        "id": "4923031916",
+        "actor": "kilmidas",
+        "occurredAt": "2026-07-19T14:21:51.000Z",
+        "url": "https://github.com/kilmidas/oss-maintainer-evidence/pull/9",
+        "title": "Prepare the 0.1.0 release candidate",
+        "attributionRule": "pull.user.login and pull.created_at",
+        "type": "authored_pull_request"
+      },
+      {
+        "id": "4922998370",
+        "actor": "kilmidas",
+        "occurredAt": "2026-07-19T14:12:11.000Z",
+        "url": "https://github.com/kilmidas/oss-maintainer-evidence/pull/8",
+        "title": "Allow numeric GitHub detail routes",
+        "attributionRule": "pull.user.login and pull.created_at",
+        "type": "authored_pull_request"
+      },
+      {
+        "id": "4922956542",
+        "actor": "kilmidas",
+        "occurredAt": "2026-07-19T14:00:11.000Z",
+        "url": "https://github.com/kilmidas/oss-maintainer-evidence/pull/6",
+        "title": "Fix package verification with a cold npm cache",
+        "attributionRule": "pull.user.login and pull.created_at",
+        "type": "authored_pull_request"
+      }
+    ],
+    "mergedPullRequests": [
+      {
+        "id": "4086410695",
+        "actor": "kilmidas",
+        "occurredAt": "2026-07-19T16:15:41.000Z",
+        "url": "https://github.com/kilmidas/oss-maintainer-evidence/pull/15",
+        "title": "Add signed-out evidence link verification",
+        "attributionRule": "pull.merged_by.login and pull.merged_at",
+        "type": "merged_pull_request"
+      },
+      {
+        "id": "4086346916",
+        "actor": "kilmidas",
+        "occurredAt": "2026-07-19T15:53:19.000Z",
+        "url": "https://github.com/kilmidas/oss-maintainer-evidence/pull/13",
+        "title": "Document ecosystem importance with audited sources",
+        "attributionRule": "pull.merged_by.login and pull.merged_at",
+        "type": "merged_pull_request"
+      },
+      {
+        "id": "4086124710",
+        "actor": "kilmidas",
+        "occurredAt": "2026-07-19T14:32:42.000Z",
+        "url": "https://github.com/kilmidas/oss-maintainer-evidence/pull/12",
+        "title": "Resolve pre-release audit findings",
+        "attributionRule": "pull.merged_by.login and pull.merged_at",
+        "type": "merged_pull_request"
+      },
+      {
+        "id": "4086098394",
+        "actor": "kilmidas",
+        "occurredAt": "2026-07-19T14:23:41.000Z",
+        "url": "https://github.com/kilmidas/oss-maintainer-evidence/pull/9",
+        "title": "Prepare the 0.1.0 release candidate",
+        "attributionRule": "pull.merged_by.login and pull.merged_at",
+        "type": "merged_pull_request"
+      },
+      {
+        "id": "4086072140",
+        "actor": "kilmidas",
+        "occurredAt": "2026-07-19T14:14:07.000Z",
+        "url": "https://github.com/kilmidas/oss-maintainer-evidence/pull/8",
+        "title": "Allow numeric GitHub detail routes",
+        "attributionRule": "pull.merged_by.login and pull.merged_at",
+        "type": "merged_pull_request"
+      },
+      {
+        "id": "4086040055",
+        "actor": "kilmidas",
+        "occurredAt": "2026-07-19T14:02:20.000Z",
+        "url": "https://github.com/kilmidas/oss-maintainer-evidence/pull/6",
+        "title": "Fix package verification with a cold npm cache",
+        "attributionRule": "pull.merged_by.login and pull.merged_at",
+        "type": "merged_pull_request"
+      }
+    ],
+    "reviews": [],
+    "openedIssues": [
+      {
+        "id": "4923383506",
+        "actor": "kilmidas",
+        "occurredAt": "2026-07-19T16:02:51.000Z",
+        "url": "https://github.com/kilmidas/oss-maintainer-evidence/issues/14",
+        "title": "Add signed-out verification for report evidence links",
+        "attributionRule": "issue.user.login and issue.created_at",
+        "type": "opened_issue"
+      },
+      {
+        "id": "4923063774",
+        "actor": "kilmidas",
+        "occurredAt": "2026-07-19T14:31:11.000Z",
+        "url": "https://github.com/kilmidas/oss-maintainer-evidence/issues/11",
+        "title": "Pin GitHub Actions to immutable commits",
+        "attributionRule": "issue.user.login and issue.created_at",
+        "type": "opened_issue"
+      },
+      {
+        "id": "4923062734",
+        "actor": "kilmidas",
+        "occurredAt": "2026-07-19T14:30:52.000Z",
+        "url": "https://github.com/kilmidas/oss-maintainer-evidence/issues/10",
+        "title": "Bound child termination after GitHub CLI timeouts",
+        "attributionRule": "issue.user.login and issue.created_at",
+        "type": "opened_issue"
+      },
+      {
+        "id": "4922996334",
+        "actor": "kilmidas",
+        "occurredAt": "2026-07-19T14:11:36.000Z",
+        "url": "https://github.com/kilmidas/oss-maintainer-evidence/issues/7",
+        "title": "Collection rejects numeric pull request and issue routes",
+        "attributionRule": "issue.user.login and issue.created_at",
+        "type": "opened_issue"
+      },
+      {
+        "id": "4922955170",
+        "actor": "kilmidas",
+        "occurredAt": "2026-07-19T13:59:46.000Z",
+        "url": "https://github.com/kilmidas/oss-maintainer-evidence/issues/5",
+        "title": "Package verification fails with a cold npm cache",
+        "attributionRule": "issue.user.login and issue.created_at",
+        "type": "opened_issue"
+      }
+    ],
+    "closedIssues": [
+      {
+        "id": "4923383506",
+        "actor": "kilmidas",
+        "occurredAt": "2026-07-19T16:15:42.000Z",
+        "url": "https://github.com/kilmidas/oss-maintainer-evidence/issues/14",
+        "title": "Add signed-out verification for report evidence links",
+        "attributionRule": "issue.closed_by.login and issue.closed_at",
+        "type": "closed_issue"
+      },
+      {
+        "id": "4923062734",
+        "actor": "kilmidas",
+        "occurredAt": "2026-07-19T14:32:43.000Z",
+        "url": "https://github.com/kilmidas/oss-maintainer-evidence/issues/10",
+        "title": "Bound child termination after GitHub CLI timeouts",
+        "attributionRule": "issue.closed_by.login and issue.closed_at",
+        "type": "closed_issue"
+      },
+      {
+        "id": "4923063774",
+        "actor": "kilmidas",
+        "occurredAt": "2026-07-19T14:32:43.000Z",
+        "url": "https://github.com/kilmidas/oss-maintainer-evidence/issues/11",
+        "title": "Pin GitHub Actions to immutable commits",
+        "attributionRule": "issue.closed_by.login and issue.closed_at",
+        "type": "closed_issue"
+      },
+      {
+        "id": "4922996334",
+        "actor": "kilmidas",
+        "occurredAt": "2026-07-19T14:14:08.000Z",
+        "url": "https://github.com/kilmidas/oss-maintainer-evidence/issues/7",
+        "title": "Collection rejects numeric pull request and issue routes",
+        "attributionRule": "issue.closed_by.login and issue.closed_at",
+        "type": "closed_issue"
+      },
+      {
+        "id": "4922955170",
+        "actor": "kilmidas",
+        "occurredAt": "2026-07-19T14:02:21.000Z",
+        "url": "https://github.com/kilmidas/oss-maintainer-evidence/issues/5",
+        "title": "Package verification fails with a cold npm cache",
+        "attributionRule": "issue.closed_by.login and issue.closed_at",
+        "type": "closed_issue"
+      }
+    ],
+    "issueComments": []
+  },
+  "summary": {
+    "releases": 2,
+    "authoredPullRequests": 6,
+    "mergedPullRequests": 6,
+    "reviews": 0,
+    "openedIssues": 5,
+    "closedIssues": 5,
+    "issueComments": 0,
+    "total": 24
+  },
+  "community": {
+    "readme": {
+      "status": "present",
+      "sourceUrl": "https://github.com/kilmidas/oss-maintainer-evidence/blob/main/README.md"
+    },
+    "license": {
+      "status": "present",
+      "sourceUrl": "https://github.com/kilmidas/oss-maintainer-evidence/blob/main/LICENSE"
+    },
+    "contributing": {
+      "status": "present",
+      "sourceUrl": "https://github.com/kilmidas/oss-maintainer-evidence/blob/main/CONTRIBUTING.md"
+    },
+    "codeOfConduct": {
+      "status": "present",
+      "sourceUrl": "https://github.com/kilmidas/oss-maintainer-evidence/blob/main/CODE_OF_CONDUCT.md"
+    },
+    "issueTemplate": {
+      "status": "absent"
+    },
+    "pullRequestTemplate": {
+      "status": "present",
+      "sourceUrl": "https://github.com/kilmidas/oss-maintainer-evidence/blob/main/.github/PULL_REQUEST_TEMPLATE.md"
+    },
+    "securityPolicy": {
+      "status": "present",
+      "sourceUrl": "https://github.com/kilmidas/oss-maintainer-evidence/blob/main/SECURITY.md"
+    }
+  },
+  "adoption": {
+    "stars": 0,
+    "forks": 0,
+    "watchers": 0,
+    "contributors": 1,
+    "observedAt": "2026-07-19T16:21:02.153Z"
+  },
+  "pagination": {
+    "releases": {
+      "fetched": 2,
+      "truncated": false
+    },
+    "authoredPullRequests": {
+      "fetched": 6,
+      "truncated": false
+    },
+    "mergedPullRequests": {
+      "fetched": 6,
+      "truncated": false
+    },
+    "reviews": {
+      "fetched": 0,
+      "truncated": false
+    },
+    "openedIssues": {
+      "fetched": 5,
+      "truncated": false
+    },
+    "closedIssues": {
+      "fetched": 5,
+      "truncated": false
+    },
+    "issueComments": {
+      "fetched": 4,
+      "truncated": false
+    },
+    "contributors": {
+      "fetched": 1,
+      "truncated": false
+    }
+  },
+  "limitations": []
+}

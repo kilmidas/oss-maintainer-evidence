@@ -165,6 +165,40 @@ test("the standard check validates the committed ecosystem ledger", () => {
   assert.match(scripts.check, /npm run evidence:check/);
 });
 
+test("latest public example records and links the v0.2.0 maintenance release", () => {
+  const readme = read("README.md");
+  const report = JSON.parse(
+    read("examples/oss-maintainer-evidence-v0.2.0.json"),
+  ) as {
+    status: string;
+    summary: { releases: number };
+    adoption: {
+      stars: number;
+      forks: number;
+      watchers: number;
+      contributors: number;
+      observedAt: string;
+    };
+    activities: { releases: Array<{ url: string }> };
+  };
+
+  assert.match(readme, /examples\/oss-maintainer-evidence-v0\.2\.0\.json/);
+  assert.equal(report.status, "complete");
+  assert.equal(report.summary.releases, 2);
+  assert.equal(report.adoption.stars, 0);
+  assert.equal(report.adoption.forks, 0);
+  assert.equal(report.adoption.watchers, 0);
+  assert.equal(report.adoption.contributors, 1);
+  assert.match(report.adoption.observedAt, /Z$/);
+  assert.ok(
+    report.activities.releases.some(
+      ({ url }) =>
+        url ===
+        "https://github.com/kilmidas/oss-maintainer-evidence/releases/tag/v0.2.0",
+    ),
+  );
+});
+
 function escapeRegex(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
