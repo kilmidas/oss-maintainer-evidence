@@ -1,11 +1,7 @@
 import { GhApiError, runGhApi } from "../process/gh-runner.js";
 import type { BuiltEndpoint } from "./contracts.js";
 import { buildEndpoint, ENDPOINTS } from "./endpoints.js";
-import {
-  type RepositoryResponse,
-  repositorySchema,
-  searchSchema,
-} from "./schemas.js";
+import { repositorySchema, searchSchema } from "./schemas.js";
 
 export interface ClientOptions {
   run?: (
@@ -30,14 +26,37 @@ const nextUrl = (link?: string) =>
     .map((x) => x.trim())
     .find((x) => /;\s*rel="?next"?/i.test(x))
     ?.match(/<([^>]+)>/)?.[1];
-const endpointFromUrl = (url: string): BuiltEndpoint => {
+const endpointFromUrl = (
+  url: string,
+  contract: typeof ENDPOINTS.releases | typeof ENDPOINTS.searchIssues,
+): BuiltEndpoint => {
   const u = new URL(url);
-  if (u.hostname !== "github.com") throw new GhApiError("protocol");
-  const path = `${u.pathname}${u.search}`;
-  const contract = path.startsWith("/search/issues")
-    ? ENDPOINTS.searchIssues
-    : ENDPOINTS.releases;
-  return { path, contract, __brand: "BuiltEndpoint" };
+  if (
+    u.protocol !== "https:" ||
+    u.hostname !== "github.com" ||
+    u.port ||
+    u.username ||
+    u.password
+  )
+    throw new GhApiError("protocol");
+  if (contract === ENDPOINTS.searchIssues) {
+    if (u.pathname !== "/search/issues") throw new GhApiError("protocol");
+    const q = u.searchParams.get("q");
+    if (!q) throw new GhApiError("protocol");
+    return buildEndpoint(contract, {
+      q,
+      page: Number(u.searchParams.get("page") ?? 1),
+      per_page: Number(u.searchParams.get("per_page") ?? 100),
+    });
+  }
+  const m = u.pathname.match(/^\/repos\/([^/]+)\/([^/]+)\/releases$/);
+  if (!m) throw new GhApiError("protocol");
+  return buildEndpoint(contract, {
+    owner: decodeURIComponent(m[1]),
+    repo: decodeURIComponent(m[2]),
+    page: Number(u.searchParams.get("page") ?? 1),
+    per_page: Number(u.searchParams.get("per_page") ?? 100),
+  });
 };
 export class GithubClient {
   private readonly run: NonNullable<ClientOptions["run"]>;
@@ -90,7 +109,7 @@ export class GithubClient {
         break;
       }
       if (!next) break;
-      endpoint = endpointFromUrl(next);
+      endpoint = endpointFromUrl(next, contract);
     }
     return { items, fetched: items.length, truncated };
   }

@@ -61,3 +61,31 @@ test("pagination stops at max items and follows only next links", async () => {
   });
   assert.equal(calls, 2);
 });
+
+test("rejects non-canonical or wrong-family pagination links", async () => {
+  for (const link of [
+    '<ftp://github.com/repos/acme/demo/releases?page=2>; rel="next"',
+    '<https://user:pass@github.com/repos/acme/demo/releases?page=2>; rel="next"',
+    '<https://github.com:443/repos/acme/demo/releases?page=2>; rel="next"',
+    '<https://github.com/repos/acme/demo/issues?page=2>; rel="next"',
+  ]) {
+    const client = new GithubClient({
+      run: async () => ({ status: 200, headers: {}, body: [1], link }),
+    });
+    await assert.rejects(
+      client.paginate(
+        {
+          key: "releases",
+          template: "/repos/{owner}/{repo}/releases",
+          pagination: "page",
+          absence: "404",
+          activity: "required",
+          queryKeys: ["page", "per_page"],
+        },
+        { owner: "acme", repo: "demo" },
+        2,
+        (body) => body as number[],
+      ),
+    );
+  }
+});
