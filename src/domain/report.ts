@@ -2,7 +2,9 @@ import { z } from "zod";
 
 const githubUrl = z
   .string()
-  .regex(/^https:\/\/github\.com\/[^\s?#]+$/)
+  .regex(
+    /^https:\/\/github\.com\/(?!.*(?:\/\/|\/$|(?:^|\/)\.(?:\.|\/)|%2e|%2f))[^\s?#]+$/i,
+  )
   .refine((v) => {
     let u: URL;
     try {
@@ -34,7 +36,9 @@ const githubUrl = z
   });
 const utc = z
   .string()
-  .regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?Z$/)
+  .regex(
+    /^\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|02-(?:0[1-9]|1\d|2[0-9]))T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?Z$/,
+  )
   .refine((v) => {
     const m = v.match(
       /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.(\d{1,3}))?Z$/,
