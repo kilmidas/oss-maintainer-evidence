@@ -1,5 +1,6 @@
 import type { ChildProcess } from "node:child_process";
 import { spawn as nodeSpawn } from "node:child_process";
+import type { BuiltEndpoint } from "../github/contracts.js";
 export const MAX_OUTPUT_BYTES = 8 * 1024 * 1024;
 export const DEFAULT_TIMEOUT_MS = 30_000;
 const ARGS = [
@@ -41,7 +42,7 @@ function safeMessage(category: GhErrorCategory): string {
   return `GitHub request failed (${category})`;
 }
 export async function runGhApi(
-  path: string,
+  endpoint: BuiltEndpoint | string,
   opts: { spawn?: Spawn; timeoutMs?: number } = {},
 ): Promise<{
   status: number;
@@ -50,7 +51,14 @@ export async function runGhApi(
   link?: string;
   absent?: boolean;
 }> {
-  if (!path.startsWith("/repos/") && !path.startsWith("/search/issues"))
+  const path = typeof endpoint === "string" ? endpoint : endpoint.path;
+  if (
+    typeof endpoint === "string" &&
+    !/^\/repos\/[A-Za-z0-9][A-Za-z0-9_.-]{0,99}\/[A-Za-z0-9][A-Za-z0-9_.-]{0,99}(?:\/(?:releases|pulls\/[0-9]+(?:\/reviews)?|issues\/[0-9]+(?:\/comments)?|community\/profile|contributors|contents\/[A-Za-z0-9_.-]+(?:\/[A-Za-z0-9_.-]+)*))?(?:\?[^#]+)?$/.test(
+      path,
+    ) &&
+    !/^\/search\/issues\?[^#]+$/.test(path)
+  )
     throw new GhApiError("protocol");
   const spawn = opts.spawn ?? (nodeSpawn as unknown as Spawn);
   let child: ChildProcess;
@@ -59,16 +67,21 @@ export async function runGhApi(
   } catch {
     throw new GhApiError("executable", safeMessage("executable"));
   }
+  let limited = false;
   let out: Buffer<ArrayBufferLike> = Buffer.alloc(0),
     err: Buffer<ArrayBufferLike> = Buffer.alloc(0),
     timed = false;
   const append = (
     cur: Buffer<ArrayBufferLike>,
     chunk: Buffer<ArrayBufferLike>,
-  ) =>
-    cur.length + chunk.length > MAX_OUTPUT_BYTES
-      ? cur
-      : Buffer.concat([cur, chunk]);
+  ) => {
+    if (cur.length + chunk.length > MAX_OUTPUT_BYTES) {
+      limited = true;
+      child.kill("SIGTERM");
+      return cur;
+    }
+    return Buffer.concat([cur, chunk]);
+  };
   child.stdout?.on("data", (c: Buffer) => {
     out = append(out, c);
   });
@@ -80,13 +93,14 @@ export async function runGhApi(
     child.kill("SIGTERM");
   }, opts.timeoutMs ?? DEFAULT_TIMEOUT_MS);
   const code = await new Promise<number | null>((resolve, reject) => {
-    child.once("error", reject);
+    child.once("error", () =>
+      reject(new GhApiError("executable", safeMessage("executable"))),
+    );
     child.once("close", resolve);
   });
   clearTimeout(timeout);
   if (timed) throw new GhApiError("timeout", safeMessage("timeout"));
-  if (out.length >= MAX_OUTPUT_BYTES || err.length >= MAX_OUTPUT_BYTES)
-    throw new GhApiError("output", safeMessage("output"));
+  if (limited) throw new GhApiError("output", safeMessage("output"));
   if (code !== 0) {
     const text = err.toString().toLowerCase();
     throw new GhApiError(
@@ -111,11 +125,10 @@ export async function runGhApi(
     if (i < 1) continue;
     const k = line.slice(0, i).toLowerCase();
     if (k === "link") link = line.slice(i + 1).trim();
-    else if (k === "content-type") headers[k] = line.slice(i + 1).trim();
   }
   const status = Number(m[1]);
   const bodyText = framing.slice(split + 4).trim();
-  if (status === 204 && !bodyText)
+  if (status === 204)
     return { status, headers, body: undefined, link, absent: true };
   let body: unknown;
   try {

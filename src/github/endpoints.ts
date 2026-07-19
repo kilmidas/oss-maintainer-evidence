@@ -96,8 +96,37 @@ export function buildEndpoint(
   for (const token of contract.template.match(/\{[^}]+\}/g) ?? []) {
     const key = token.slice(1, -1);
     const value = params[key];
-    if (!valid(String(value))) throw new Error("invalid path parameter");
-    path = path.replace(token, encodeURIComponent(String(value)));
+    if (value === undefined || value === null)
+      throw new Error("missing path parameter");
+    if (key === "path") {
+      if (
+        typeof value !== "string" ||
+        !value ||
+        value
+          .split("/")
+          .some(
+            (segment) =>
+              !segment ||
+              segment === "." ||
+              segment === ".." ||
+              segment.includes("%") ||
+              [...segment].some(
+                (char) => char.charCodeAt(0) < 32 || char.charCodeAt(0) === 127,
+              ),
+          )
+      )
+        throw new Error("invalid path parameter");
+      path = path.replace(
+        token,
+        value
+          .split("/")
+          .map((segment) => encodeURIComponent(segment))
+          .join("/"),
+      );
+    } else {
+      if (!valid(value)) throw new Error("invalid path parameter");
+      path = path.replace(token, encodeURIComponent(String(value)));
+    }
   }
   const query = new URLSearchParams();
   for (const key of contract.queryKeys)
