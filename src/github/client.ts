@@ -45,6 +45,8 @@ const endpointFromUrl = (
   if (contract === ENDPOINTS.searchIssues) {
     if (u.pathname !== "/search/issues") throw new GhApiError("protocol");
     const q = u.searchParams.get("q");
+    const sort = u.searchParams.get("sort");
+    const order = u.searchParams.get("order");
     if (!q) throw new GhApiError("protocol");
     for (const key of ["q", "sort", "order"]) {
       if (
@@ -55,12 +57,8 @@ const endpointFromUrl = (
     }
     return buildEndpoint(contract, {
       q,
-      ...(u.searchParams.has("sort")
-        ? { sort: u.searchParams.get("sort")! }
-        : {}),
-      ...(u.searchParams.has("order")
-        ? { order: u.searchParams.get("order")! }
-        : {}),
+      ...(sort ? { sort } : {}),
+      ...(order ? { order } : {}),
       page: Number(u.searchParams.get("page") ?? 1),
       per_page: Number(u.searchParams.get("per_page") ?? 100),
     });
