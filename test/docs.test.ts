@@ -18,6 +18,8 @@ const requiredFiles = [
   "AGENTS.md",
   "docs/architecture.md",
   "docs/attribution.md",
+  "docs/ecosystem-importance.md",
+  "docs/ecosystem-importance.sources.json",
   "docs/limitations.md",
   ".github/ISSUE_TEMPLATE/bug.yml",
   ".github/ISSUE_TEMPLATE/feature.yml",
@@ -98,6 +100,29 @@ test("documentation does not claim public forks are rejected", () => {
     .map(read)
     .join("\n");
   assert.doesNotMatch(scopeDocs, /non-fork|fork[^\n]*(?:reject|fail closed)/i);
+});
+
+test("ecosystem importance narrative covers every ledger claim and source", () => {
+  const narrative = read("docs/ecosystem-importance.md");
+  const ledger = JSON.parse(read("docs/ecosystem-importance.sources.json")) as {
+    claims: Array<{ id: string }>;
+    sources: Array<{ id: string }>;
+  };
+  for (const { id } of [...ledger.claims, ...ledger.sources]) {
+    assert.match(narrative, new RegExp(`\\b${escapeRegex(id)}\\b`), id);
+  }
+});
+
+test("ecosystem importance narrative rejects adoption and endorsement claims", () => {
+  const narrative = read("docs/ecosystem-importance.md");
+  assert.match(narrative, /does not demonstrate external adoption/i);
+  assert.match(narrative, /does not implement or certify the CHAOSS model/i);
+  assert.match(narrative, /does not assess OpenSSF security posture/i);
+  assert.doesNotMatch(narrative, /endorsed by|certified by|widely adopted/i);
+  assert.doesNotMatch(
+    narrative,
+    /guarantees? (?:funding|eligibility|acceptance)/i,
+  );
 });
 
 function escapeRegex(value: string): string {
