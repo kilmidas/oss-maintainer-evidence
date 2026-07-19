@@ -83,3 +83,36 @@ test("maps an expected 404 to absence even when gh exits nonzero", async () => {
   assert.equal(result.absent, true);
   assert.equal(result.body, undefined);
 });
+
+test("bounds timeout failure when the child ignores termination signals", {
+  timeout: 500,
+}, async () => {
+  const signals: (NodeJS.Signals | number | undefined)[] = [];
+  const child = Object.assign(new EventEmitter(), {
+    stdout: new EventEmitter(),
+    stderr: new EventEmitter(),
+    kill(signal?: NodeJS.Signals | number) {
+      signals.push(signal);
+      return true;
+    },
+    unref() {},
+  }) as unknown as ChildProcess;
+  const spawn = (() => child) as Spawn;
+
+  await assert.rejects(
+    runGhApi(
+      buildEndpoint(ENDPOINTS.repository, {
+        owner: "octo",
+        repo: "hello",
+      }),
+      {
+        spawn,
+        timeoutMs: 5,
+        terminationGraceMs: 5,
+      } as RunOptions,
+    ),
+    (error: unknown) =>
+      error instanceof GhApiError && error.category === "timeout",
+  );
+  assert.deepEqual(signals, ["SIGTERM", "SIGKILL"]);
+});
