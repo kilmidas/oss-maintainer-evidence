@@ -9,6 +9,8 @@ Thank you for helping improve OSS Maintainer Evidence. Keep changes small, revie
 3. Never post tokens, private repository data, internal URLs, application correspondence, or personal information.
 4. For a vulnerability, follow [SECURITY.md](SECURITY.md) instead of opening a public issue.
 
+To test the current release on a public repository, follow the [independent validation guide](docs/independent-validation.md) and use its dedicated issue form. Sharing a generated report is optional; version, outcome, accuracy notes, and sanitized workflow friction are sufficient.
+
 ## Local setup
 
 Use Node.js 22 or later:

@@ -20,9 +20,11 @@ const requiredFiles = [
   "docs/attribution.md",
   "docs/ecosystem-importance.md",
   "docs/ecosystem-importance.sources.json",
+  "docs/independent-validation.md",
   "docs/limitations.md",
   ".github/ISSUE_TEMPLATE/bug.yml",
   ".github/ISSUE_TEMPLATE/feature.yml",
+  ".github/ISSUE_TEMPLATE/validation.yml",
   ".github/ISSUE_TEMPLATE/config.yml",
   ".github/PULL_REQUEST_TEMPLATE.md",
 ] as const;
@@ -152,6 +154,34 @@ test("public documentation links the ecosystem evidence without overclaiming", (
     /\[ecosystem importance evidence]\(ecosystem-importance\.md\)/i,
   );
   assert.match(limitations, /does not demonstrate external adoption/i);
+});
+
+test("public documentation provides a safe independent validation path", () => {
+  const readme = read("README.md");
+  const contributing = read("CONTRIBUTING.md");
+  const guide = read("docs/independent-validation.md");
+  const issueForm = read(".github/ISSUE_TEMPLATE/validation.yml");
+
+  assert.match(
+    readme,
+    /\[Independent validation]\(docs\/independent-validation\.md\)/,
+  );
+  assert.match(
+    contributing,
+    /\[independent validation guide]\(docs\/independent-validation\.md\)/i,
+  );
+  assert.match(guide, /oss-evidence verify evidence\.json/);
+  assert.match(guide, /sharing (?:the )?report is optional/i);
+  assert.match(guide, /does not demonstrate external adoption/i);
+  assert.match(guide, /does not imply endorsement or affiliation/i);
+  assert.match(issueForm, /label: Released version/);
+  assert.match(issueForm, /label: Validation outcome/);
+  assert.match(issueForm, /only public GitHub\.com data/i);
+  assert.match(
+    issueForm,
+    /does not imply endorsement, certification, or affiliation/i,
+  );
+  assert.doesNotMatch(issueForm, /token value|private report contents/i);
 });
 
 test("the standard check validates the committed ecosystem ledger", () => {
