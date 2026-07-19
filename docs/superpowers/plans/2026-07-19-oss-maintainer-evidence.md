@@ -32,6 +32,7 @@
 - Create: `biome.json`
 - Create: `.gitignore`
 - Create: `src/cli.ts`
+- Create: `src/version.ts`
 - Create: `test/cli-help.test.ts`
 
 - [ ] **Step 1: Add a failing command smoke test**
@@ -58,7 +59,7 @@ Use this dependency policy:
 }
 ```
 
-Set `type: "module"`, `engines.node: ">=22"`, `bin.oss-evidence: "./dist/cli.js"`, `files` to `dist`, `schema`, `README.md`, `LICENSE`, and package scripts for `build`, `typecheck`, `test`, `format`, `lint`, `check`, and `prepack`. Keep `private: true` throughout `0.1.0`; the first release distributes a verified npm-compatible archive through GitHub Releases and cannot be accidentally published to npm.
+Set the exact metadata `name: "oss-evidence"`, `version: "0.1.0"`, `license: "Apache-2.0"`, `type: "module"`, `engines.node: ">=22"`, `bin.oss-evidence: "./dist/cli.js"`, repository and issue URLs under `https://github.com/kilmidas/oss-maintainer-evidence`, and `files` to `dist`, `schema`, `README.md`, `LICENSE`. Add scripts for `build`, `typecheck`, `test`, `format`, `lint`, `check`, and `prepack`. Keep `private: true` throughout `0.1.0`; the first release is the deterministic `oss-evidence-0.1.0.tgz` archive distributed through GitHub Releases and cannot be accidentally published to npm.
 
 Configure TypeScript with `target: "ES2022"`, `module: "NodeNext"`, `moduleResolution: "NodeNext"`, strict checking, Node types, source maps, declarations for the production build, and separate `.test-dist` output for tests. Ignore `node_modules`, `dist`, `.test-dist`, coverage output, generated archives, environment files, and local evidence output.
 
@@ -67,7 +68,7 @@ Expected: a lockfile with only the declared direct dependencies and platform pac
 
 - [ ] **Step 3: Implement only help and version entry points**
 
-Add the Node shebang to `src/cli.ts`. Use `parseArgs` only to recognize `--help` and `--version`; all unsupported invocations must still fail with exit `2`. Read the version from a generated constant or package metadata without importing JSON through an unstable path.
+Add the Node shebang to `src/cli.ts`. Use `parseArgs` only to recognize `--help` and `--version`; all unsupported invocations must still fail with exit `2`. Treat root `package.json` as the single version source: `src/version.ts` reads the package file relative to the installed `dist` module with `node:fs`, validates the expected package name and semantic version, and returns that value. Tests must prove `--version`, archive name, changelog heading, and release tag expectations all derive from `0.1.0` rather than duplicate mutable constants.
 
 Run: `npm test`  
 Expected: the help test passes.
@@ -80,7 +81,7 @@ Expected: format, lint, type checking, tests, and build all pass.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add package.json package-lock.json tsconfig.json tsconfig.build.json tsconfig.test.json biome.json .gitignore src/cli.ts test/cli-help.test.ts
+git add package.json package-lock.json tsconfig.json tsconfig.build.json tsconfig.test.json biome.json .gitignore src/cli.ts src/version.ts test/cli-help.test.ts
 git commit -m "build: establish typed CLI package"
 ```
 
@@ -565,7 +566,7 @@ git commit -m "ci: verify builds and dependencies"
 - Push: reviewed local `main` history
 - Configure: description, topics, issue tracker, private vulnerability reporting, and available branch protection or rulesets
 
-The repository owner explicitly authorized creation, push, profile setup, and application completion in the current conversation on 2026-07-19. That authorization covers the remote actions named in Tasks 14, 17, and 18. Before each write, verify the authenticated account and exact target. Stop only if the account, repository, visibility, or action differs from this recorded scope. npm publication is not part of `0.1.0` and remains blocked by `private: true`.
+The repository owner explicitly authorized creation, push, profile setup, and application completion in the current conversation on 2026-07-19. That authorization covers repository creation plus branch, pull request, merge, tag, release, setting, and profile writes named in Tasks 14–18, only for `kilmidas/oss-maintainer-evidence` and `kilmidas/kilmidas`. Before each write, verify the authenticated account and exact target. Stop only if the account, repository, visibility, or action differs from this recorded scope. npm publication is not part of `0.1.0` and remains blocked by `private: true`.
 
 - [ ] **Step 1: Finish and integrate the reviewed implementation branch**
 
@@ -581,7 +582,7 @@ Create a public repository without auto-generated files, add `origin`, push `mai
 
 - [ ] **Step 4: Verify public automation and repository health**
 
-Wait for CI and dependency review. Enable private vulnerability reporting and protections available to the account without weakening contributor access. Confirm license detection, community files, issue templates, security policy, and exact workflow permissions through public pages or API responses. Fix real failures on a focused branch and let CI rerun.
+Wait for CI on the initial `main` push. The dependency-review workflow runs only on pull requests, so at this step inspect its trigger and permissions but do not claim it has executed. Enable private vulnerability reporting and protections available to the account without weakening contributor access. Confirm license detection, community files, issue templates, security policy, and exact workflow permissions through public pages or API responses. Fix real failures on a focused branch and let CI rerun.
 
 ## Task 15: Produce and Verify the `0.1.0` Release Candidate
 
@@ -620,15 +621,18 @@ npm pack --dry-run
 
 Add the verified example links to README, finalize `CHANGELOG.md`, and write a release checklist covering CI, dependency licenses, archive contents, public link inspection, secret scan, tag/version match, attestation verification, checksum generation, and recovery guidance. Review all of these tracked changes before creating the final archive.
 
-- [ ] **Step 3: Commit and publish the release candidate changes**
+- [ ] **Step 3: Submit the release candidate through a real pull request**
+
+Create `release/0.1.0` from the current remote `main`, then commit only the reviewed release-candidate files:
 
 ```bash
+git switch -c release/0.1.0
 git add examples docs/release-checklist.md README.md CHANGELOG.md
 git commit -m "docs: prepare 0.1.0 release candidate"
-git push origin main
+git push -u origin release/0.1.0
 ```
 
-Wait for Node 22 and 24 CI, including archive installation, to pass. Do not tag or retain any pre-commit archive as a release candidate.
+Create a pull request from `release/0.1.0` to `main` describing the real generated examples and release checks. Wait for Node 22 and 24 CI, dependency review, and archive-install checks. Merge only after every required check passes, then update local `main` by fast-forward. Do not tag or retain any pre-merge archive as a release candidate.
 
 ## Task 16: Run an Independent Pre-Release Audit
 
@@ -640,7 +644,7 @@ Have a reviewer inspect input handling, subprocess execution, `--include` framin
 
 - [ ] **Step 2: Fix findings and freeze the reviewed commit**
 
-Fix confirmed findings with regression tests, push them, and wait for the complete Node 22 and 24 matrix. Then verify a clean worktree and matching local and remote `main` commits. Record that exact commit identifier as the proposed release commit; any subsequent tracked change invalidates the freeze.
+Fix confirmed findings with regression tests on a focused branch, open a pull request, and wait for the complete Node 22 and 24 plus dependency-review matrix before merging. Then verify a clean worktree and matching local and remote `main` commits. Record that exact commit identifier as the proposed release commit; any subsequent tracked change invalidates the freeze.
 
 - [ ] **Step 3: Build the local candidate from a clean checkout**
 
