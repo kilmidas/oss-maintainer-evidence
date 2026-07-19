@@ -12,12 +12,28 @@ import { dirname, join, resolve } from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
-import { parseCollectInput } from "../src/domain/input.js";
+import { parseCollectInput, parseVerifyInput } from "../src/domain/input.js";
 import { InputError } from "../src/errors.js";
 
 const NOW = new Date("2026-07-19T12:34:56.789Z");
 const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const cliPath = resolve(projectRoot, "dist/cli.js");
+
+test("verify input accepts exactly one safe report path", () => {
+  assert.deepEqual(parseVerifyInput(["verify", "reports/evidence.json"]), {
+    reportPath: "reports/evidence.json",
+  });
+
+  for (const args of [
+    ["verify"],
+    ["verify", ""],
+    ["verify", "report.json", "extra"],
+    ["verify", "report\n.json"],
+    ["collect", "report.json"],
+  ]) {
+    assert.throws(() => parseVerifyInput(args), InputError);
+  }
+});
 
 function runCli(args: readonly string[], env: NodeJS.ProcessEnv = process.env) {
   return spawnSync(process.execPath, [cliPath, ...args], {

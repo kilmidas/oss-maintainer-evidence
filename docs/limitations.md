@@ -1,6 +1,6 @@
 # Known Limitations
 
-Version `0.1.0` is deliberately narrow so every reported item has a transparent public source.
+Version `0.2.0` is deliberately narrow so every reported item has a transparent public source.
 
 ## Collection scope
 
@@ -26,3 +26,10 @@ Counts are calculated only from listed activities. Stars, forks, watchers, contr
 The source-linked [ecosystem importance evidence](ecosystem-importance.md) explains why auditable maintainer activity can be useful context. It does not demonstrate external adoption, project impact, endorsement, certification, or program eligibility.
 
 Review public usernames, titles, timestamps, and URLs before publishing a report. See [attribution.md](attribution.md) for exact inclusion rules and [architecture.md](architecture.md) for safety boundaries.
+
+## Link verification
+
+- Verification accepts only schema-version 1.0 JSON reports and public `https://github.com` evidence URLs. It does not parse Markdown, use authentication, or support private, enterprise, or arbitrary web targets.
+- A successful check means the URL returned HTTP 200 through 299 at that moment without supplied credentials. It does not prove permanent availability, content correctness, reviewer acceptance, or ownership.
+- Rate limiting, transient network failures, GitHub outages, or a later link change can produce a failed result. Version 0.2.0 does not retry.
+- Input is limited to 5 MiB and 2,000 unique HTTP targets. Requests use eight workers, a ten-second timeout per request, and at most five canonical same-host redirects.

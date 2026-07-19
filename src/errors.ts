@@ -7,7 +7,7 @@ const GITHUB_TOKEN =
   /\b(?:gh[pousr]_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,})\b/g;
 const OPENAI_KEY = /\bsk-[A-Za-z0-9_-]{20,}\b/g;
 
-export type OperationalExitCode = 2 | 3 | 4 | 5;
+export type OperationalExitCode = 2 | 3 | 4 | 5 | 6;
 
 export function sanitizeErrorMessage(message: string): string {
   return message
@@ -82,5 +82,16 @@ export class OutputWriteError extends OperationalError {
 
   constructor(message: string) {
     super("OutputWriteError", message);
+  }
+}
+
+export class VerificationFailedError<TReport> extends OperationalError {
+  readonly exitCode = 6 as const;
+
+  constructor(
+    message: string,
+    readonly report: TReport,
+  ) {
+    super("VerificationFailedError", message);
   }
 }

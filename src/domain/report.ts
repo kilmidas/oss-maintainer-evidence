@@ -34,6 +34,7 @@ const githubUrl = z
       !/%2e|%2f/i.test(rawPath)
     );
   });
+export const publicGithubUrlSchema = githubUrl;
 const utc = z
   .string()
   .regex(

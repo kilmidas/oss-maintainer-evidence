@@ -64,6 +64,7 @@ test("prints command help without standard-error output", () => {
     result.stdout,
     /^Usage: oss-evidence collect owner\/repository --maintainer username$/m,
   );
+  assert.match(result.stdout, /^ {7}oss-evidence verify <report.json>$/m);
   assert.equal(result.stderr, "");
 });
 
@@ -161,7 +162,7 @@ test("derives the archive filename from package metadata", () => {
     packResults[0]?.filename,
     `${packageMetadata.name}-${packageMetadata.version}.tgz`,
   );
-  assert.equal(packResults[0]?.filename, "oss-evidence-0.1.0.tgz");
+  assert.equal(packResults[0]?.filename, "oss-evidence-0.2.0.tgz");
   assert.ok(
     packResults[0]?.files?.some(({ path }) => path === "dist/package.json"),
   );
