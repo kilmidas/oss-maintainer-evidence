@@ -1,1 +1,7 @@
-{"files":{"code_of_conduct":{"url":"https://github.com/acme/demo/blob/main/CODE_OF_CONDUCT.md"}}}
+{
+  "files": {
+    "code_of_conduct": {
+      "url": "https://github.com/acme/demo/blob/main/CODE_OF_CONDUCT.md"
+    }
+  }
+}
