@@ -34,6 +34,15 @@ const endpointFromUrl = (
   if (/^https:\/\/[^/]*:\d+(?:\/|$)/i.test(url))
     throw new GhApiError("protocol");
   const u = new URL(url);
+  const pageValue = u.searchParams.get("page");
+  const perPageValue = u.searchParams.get("per_page");
+  const page =
+    pageValue === null || /^[1-9]\d*$/.test(pageValue)
+      ? Number(pageValue ?? 1)
+      : NaN;
+  const perPage = perPageValue === null || perPageValue === "100" ? 100 : NaN;
+  if (!Number.isSafeInteger(page) || page < 1 || perPage !== 100)
+    throw new GhApiError("protocol");
   if (
     u.protocol !== "https:" ||
     u.hostname !== "github.com" ||
@@ -59,8 +68,8 @@ const endpointFromUrl = (
       q,
       ...(sort ? { sort } : {}),
       ...(order ? { order } : {}),
-      page: Number(u.searchParams.get("page") ?? 1),
-      per_page: Number(u.searchParams.get("per_page") ?? 100),
+      page,
+      per_page: perPage,
     });
   }
   const m = u.pathname.match(/^\/repos\/([^/]+)\/([^/]+)\/releases$/);
@@ -75,8 +84,8 @@ const endpointFromUrl = (
   return buildEndpoint(contract, {
     owner,
     repo,
-    page: Number(u.searchParams.get("page") ?? 1),
-    per_page: Number(u.searchParams.get("per_page") ?? 100),
+    page,
+    per_page: perPage,
   });
 };
 export class GithubClient {
