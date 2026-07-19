@@ -10,10 +10,10 @@ const base = {
   pagination: { releases: { fetched: 2, truncated: false }, authoredPullRequests: { fetched: 2, truncated: false }, mergedPullRequests: { fetched: 0, truncated: false }, reviews: { fetched: 0, truncated: false }, openedIssues: { fetched: 0, truncated: false }, closedIssues: { fetched: 0, truncated: false }, issueComments: { fetched: 0, truncated: false } },
   limitations: [],
 };
-const activity = (id: string, type: "release" | "authoredPullRequest") => ({ id, type, actor: "octocat", occurredAt: "2026-01-02T00:00:00.000Z", url: `https://github.com/acme/repo/${type}/${id}`, title: "same", attributionRule: "author" });
+const activity = (id: string, type: "release" | "authored_pull_request") => ({ id, type, actor: "octocat", occurredAt: "2026-01-02T00:00:00.000Z", url: `https://github.com/acme/repo/${type}/${id}`, title: "same", attributionRule: "author" });
 
 test("aggregates a strict versioned report and computes counts", () => {
-  const report = aggregateEvidence({ ...base, status: "complete", activities: { releases: [activity("1", "release")], authoredPullRequests: [activity("1", "authoredPullRequest"), activity("1", "authoredPullRequest"), activity("2", "authoredPullRequest")], mergedPullRequests: [], reviews: [], openedIssues: [], closedIssues: [], issueComments: [] }, summary: { releases: 999 } } as never);
+  const report = aggregateEvidence({ ...base, status: "complete", activities: { releases: [activity("1", "release")], authoredPullRequests: [activity("1", "authored_pull_request"), activity("1", "authored_pull_request"), activity("2", "authored_pull_request")], mergedPullRequests: [], reviews: [], openedIssues: [], closedIssues: [], issueComments: [] }, summary: { releases: 999 } } as never);
   assert.equal(report.schemaVersion, "1.0");
   assert.deepEqual(report.summary, { releases: 1, authoredPullRequests: 2, mergedPullRequests: 0, reviews: 0, openedIssues: 0, closedIssues: 0, issueComments: 0, total: 3 });
   assert.equal((report.activities.authoredPullRequests as unknown[]).length, 2);
