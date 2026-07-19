@@ -45,8 +45,8 @@ This design instead focuses on retrospective, verifiable evidence of maintainer 
    oss-evidence collect owner/repository --maintainer username --since 90d
    ```
 
-4. The CLI validates the repository and maintainer names, fetches public GitHub data through `gh api`, normalizes the responses, and calculates transparent summaries.
-5. The CLI writes `oss-evidence-report.md` and, when requested, `oss-evidence-report.json`.
+4. The CLI validates the repository and maintainer names, forces the GitHub.com host, rejects any repository that is not public, fetches public data through `gh api`, normalizes the responses, and calculates transparent summaries.
+5. The CLI writes one selected format to standard output, or to the path supplied with `--output`.
 6. The maintainer reviews the report and follows its source links. The tool never submits the report or changes GitHub.
 
 ## First-Release Scope
@@ -56,7 +56,7 @@ This design instead focuses on retrospective, verifiable evidence of maintainer 
 - Required repository in `owner/name` form.
 - Required maintainer GitHub username.
 - Optional reporting window using `--since`, defaulting to 90 days.
-- Optional `--format markdown|json`, defaulting to Markdown.
+- Optional `--format markdown|json`, defaulting to Markdown. One invocation produces one format.
 - Optional `--output <path>`.
 - Optional `--max-items <number>`, defaulting to 200 per paginated resource and capped at 1,000.
 
@@ -64,16 +64,32 @@ Configuration files are intentionally excluded from the first release. A small e
 
 ### Evidence Collected
 
-The tool will collect only evidence available through public GitHub APIs and the authenticated user's permitted read access:
+The tool will collect only evidence available for a public repository on GitHub.com. GitHub CLI authentication is used for supported API access and rate limits, but it does not expand the product scope to private, internal, or enterprise repositories:
 
 - Repository facts: visibility, description, license, creation date, latest push, default branch, stars, forks, watchers, open issue count, and archived state.
-- Release work: releases and tags within the reporting window, with source URLs and dates.
-- Pull request work: pull requests authored by the maintainer, merged pull requests, and review events that can be attributed through available GitHub data.
-- Issue work: issues opened or closed by the maintainer and maintainer comments discoverable through supported endpoints.
+- Release work: releases authored by the maintainer within the reporting window, with source URLs and dates. A release-associated tag is shown as release metadata; standalone tags are not attributed to a maintainer.
+- Pull request work: pull requests authored by the maintainer, pull requests merged by the maintainer, and submitted reviews authored by the maintainer within the reporting window.
+- Issue work: issues opened by the maintainer, issues closed by the maintainer, and issue comments authored by the maintainer within the reporting window. Label changes and other implied triage actions are not attributed in the first release.
 - Community health signals: presence of README, license, contributing guide, security policy, code of conduct, issue templates, and pull request template.
 - Adoption proxies: stars, forks, watchers, contributors visible through GitHub, and package links declared by the repository. Package download counts are excluded until a later release can support registries with clear provenance.
 
 GitHub APIs do not expose every kind of maintainer labor in a complete or uniform way. Missing review, triage, permission, or download data must be reported as unavailable, not treated as zero.
+
+### Attribution and Time Rules
+
+GitHub usernames are compared case-insensitively and preserved in their API-provided form for display. The reporting window is inclusive: an event is included when its event-specific timestamp is greater than or equal to `since` and less than or equal to the collection start time, all normalized to UTC.
+
+The first release uses only these attribution rules:
+
+- Release: `release.author.login` matches the maintainer; time is `published_at`, falling back to `created_at` only when the release is unpublished and the fallback is disclosed.
+- Authored pull request: `pull.user.login` matches; time is `created_at`.
+- Merged pull request: `pull.merged_by.login` matches; time is `merged_at`. A pull request merely merged during the window is not maintainer evidence when another actor merged it.
+- Pull request review: `review.user.login` matches and the review has a submitted state; time is `submitted_at`.
+- Opened issue: `issue.user.login` matches; time is `created_at`.
+- Closed issue: `issue.closed_by.login` matches; time is `closed_at`.
+- Issue comment: `comment.user.login` matches; time is `created_at`.
+
+Repository facts, community files, and adoption signals describe the repository and are never presented as actions performed by the maintainer. Events lacking the required actor or timestamp remain unavailable and generate a limitation entry; they are not guessed from commit names, email addresses, labels, or repository permissions.
 
 ### Output Sections
 
@@ -88,14 +104,28 @@ The Markdown report will contain:
 7. Limitations: truncated pages, unavailable endpoints, permission gaps, and known attribution limits.
 8. Evidence appendix: canonical URLs for every collected event.
 
-The JSON output will use a versioned top-level schema field so future changes can be handled without silently changing meaning.
+The JSON output will contain these required top-level fields:
+
+- `schemaVersion`: starts at `1.0`.
+- `generatedAt`: UTC collection start time.
+- `status`: `complete` or `partial`.
+- `query`: repository, maintainer, inclusive `since` and `until`, and `maxItems`.
+- `repository`: observed repository facts, source URL, and observation time.
+- `activities`: arrays for releases, authored pull requests, merged pull requests, reviews, opened issues, closed issues, and issue comments.
+- `summary`: counts derived only from the corresponding activity arrays.
+- `community`: each expected file represented as `present`, `absent`, or `unavailable` with a source URL when present.
+- `adoption`: observed values and observation time. Unknown values are `null`, never zero.
+- `pagination`: fetched count and `truncated` flag for every paginated resource.
+- `limitations`: structured entries with a stable code, affected resource, and human-readable message.
+
+Every activity item requires `id`, `type`, `actor`, `occurredAt`, `url`, `title`, and `attributionRule`. A runtime collection gap or truncation sets `status` to `partial`. An API limitation that is explicitly outside the first-release collection contract is documented but does not by itself change a successfully collected report from `complete` to `partial`.
 
 ## Architecture
 
 The project will use TypeScript on Node.js 20 or newer. The runtime will be split into focused modules:
 
 1. **CLI layer** parses arguments, validates bounded inputs, selects a renderer, and maps errors to exit codes.
-2. **GitHub CLI adapter** invokes `gh api` with an argument array and `shell: false`. It owns pagination, timeouts, and error translation. No token value is read or printed by the application.
+2. **GitHub CLI adapter** invokes `gh api --hostname github.com` with an argument array and `shell: false`. It owns public-repository preflight, pagination, timeouts, and error translation. No token value is read or printed by the application.
 3. **Normalization layer** converts GitHub response shapes into small internal evidence records with timestamps, actors, event types, and source URLs.
 4. **Attribution layer** applies documented rules for deciding whether an event is attributable to the requested maintainer. Ambiguous events remain unclassified.
 5. **Aggregation layer** calculates counts only from normalized records included in the report.
@@ -107,6 +137,8 @@ The GitHub adapter and process executor will be dependency-injected so tests can
 ## Data and Trust Boundaries
 
 - Repository names and usernames are untrusted input and must match conservative GitHub identifier patterns before being passed to another process.
+- Input accepts only `owner/name`, not arbitrary URLs or hostnames. All API calls are forced to `github.com`.
+- Before any activity endpoint is queried, repository metadata must report `private: false`, `visibility: public`, and a canonical GitHub.com URL. Private, internal, missing, and GitHub Enterprise repositories are rejected.
 - `gh` is executed directly with an argument array. Shell interpolation is prohibited.
 - GitHub response text is untrusted. Renderers must escape Markdown control sequences where needed and must never execute repository content.
 - The CLI uses read endpoints only. A test will fail if the adapter introduces non-read HTTP methods.
@@ -116,12 +148,12 @@ The GitHub adapter and process executor will be dependency-injected so tests can
 ## Error Handling and Exit Codes
 
 - Exit `0`: complete report generated.
-- Exit `2`: invalid command input or unsupported option.
-- Exit `3`: GitHub CLI missing, unauthenticated, network failure, rate limit, or permission failure.
-- Exit `4`: GitHub returned usable but incomplete data. A report is generated with a prominent partial-data warning.
+- Exit `2`: invalid command input, unsupported option, or a repository outside the public GitHub.com scope.
+- Exit `3`: GitHub CLI missing, unauthenticated, repository preflight failure, network failure, rate limit, or failure of a required activity endpoint. No report is emitted because activity counts could be misleading.
+- Exit `4`: core repository and activity collection succeeded, but an optional endpoint failed or a paginated resource was truncated by `--max-items`. A report is emitted with `status: partial` and a prominent partial-data warning.
 - Exit `5`: output file could not be written.
 
-Errors must name the failed operation and give one safe corrective action. Raw response headers, tokens, environment variables, and complete command environments must not be printed.
+An expected absence, such as a repository having no security policy, is a collected fact and does not cause exit `4`. Data that GitHub does not expose under the documented first-release contract is a limitation and does not cause exit `4`. Errors must name the failed operation and give one safe corrective action. Raw response headers, tokens, environment variables, and complete command environments must not be printed.
 
 ## Testing Strategy
 
@@ -201,8 +233,13 @@ Stars, followers, downloads, contributors, and activity will never be purchased,
 
 ## Delivery Phases
 
+The implementation plan produced from this design covers only phases 1 and 2 through version `0.1.0`:
+
 1. **Foundation:** project structure, CLI contract, safe GitHub adapter, fixtures, renderers, tests, community files, and continuous integration.
 2. **First public release:** sample evidence pack, installation path, release notes, package publication if the package name remains available, and profile pinning.
+
+The following are operating phases after the first implementation plan, not additional product subsystems:
+
 3. **Real maintenance:** use the tool on its own repository, handle genuine issues, publish fixes and follow-up releases, and improve documentation from user feedback.
 4. **Application preparation:** collect current metrics, draft the three 500-character responses, verify the ChatGPT account email and OpenAI organization identifier, fill the form, and stop for owner approval before submission.
 
