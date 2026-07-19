@@ -1,5 +1,17 @@
 import { type Report, reportSchema } from "./report.js";
 
+const cmp = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
+const stable = (v: unknown): string => {
+  if (v === null || typeof v !== "object") return JSON.stringify(v);
+  if (Array.isArray(v)) return `[${v.map(stable).join(",")}]`;
+  return `{${Object.keys(v as Record<string, unknown>)
+    .sort(cmp)
+    .map(
+      (k) =>
+        `${JSON.stringify(k)}:${stable((v as Record<string, unknown>)[k])}`,
+    )
+    .join(",")}}`;
+};
 export { reportSchema } from "./report.js";
 export function aggregateEvidence(
   input: Omit<Report, "schemaVersion" | "generatedAt" | "summary"> & {
@@ -13,16 +25,16 @@ export function aggregateEvidence(
       key,
       [
         ...new Map(
-          (list as Array<Record<string, unknown>>).map((a) => [
-            `${a.type}:${a.id}`,
-            a,
-          ]),
+          (list as Array<Record<string, unknown>>)
+            .slice()
+            .sort((a, b) => cmp(stable(a), stable(b)))
+            .map((a) => [`${a.type}:${a.id}`, a]),
         ).values(),
       ].sort(
         (a, b) =>
-          String(b.occurredAt).localeCompare(String(a.occurredAt)) ||
-          String(a.type).localeCompare(String(b.type)) ||
-          String(a.id).localeCompare(String(b.id)),
+          cmp(String(b.occurredAt), String(a.occurredAt)) ||
+          cmp(String(a.type), String(b.type)) ||
+          cmp(String(a.id), String(b.id)),
       ),
     ]),
   ) as Report["activities"];

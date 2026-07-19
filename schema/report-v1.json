@@ -12,7 +12,10 @@
     },
     "status": {
       "type": "string",
-      "enum": ["complete", "partial"]
+      "enum": [
+        "complete",
+        "partial"
+      ]
     },
     "query": {
       "type": "object",
@@ -33,7 +36,11 @@
               "minLength": 3
             }
           },
-          "required": ["owner", "name", "fullName"],
+          "required": [
+            "owner",
+            "name",
+            "fullName"
+          ],
           "additionalProperties": false
         },
         "maintainer": {
@@ -54,7 +61,13 @@
           "maximum": 1000
         }
       },
-      "required": ["repository", "maintainer", "since", "until", "maxItems"],
+      "required": [
+        "repository",
+        "maintainer",
+        "since",
+        "until",
+        "maxItems"
+      ],
       "additionalProperties": false
     },
     "repository": {
@@ -84,7 +97,7 @@
         },
         "sourceUrl": {
           "type": "string",
-          "format": "uri"
+          "pattern": "^https:\\/\\/github\\.com\\/[^\\s?#]+$"
         },
         "observedAt": {
           "type": "string",
@@ -123,7 +136,7 @@
               },
               "url": {
                 "type": "string",
-                "format": "uri"
+                "pattern": "^https:\\/\\/github\\.com\\/[^\\s?#]+$"
               },
               "title": {
                 "type": "string"
@@ -168,7 +181,7 @@
               },
               "url": {
                 "type": "string",
-                "format": "uri"
+                "pattern": "^https:\\/\\/github\\.com\\/[^\\s?#]+$"
               },
               "title": {
                 "type": "string"
@@ -213,7 +226,7 @@
               },
               "url": {
                 "type": "string",
-                "format": "uri"
+                "pattern": "^https:\\/\\/github\\.com\\/[^\\s?#]+$"
               },
               "title": {
                 "type": "string"
@@ -258,7 +271,7 @@
               },
               "url": {
                 "type": "string",
-                "format": "uri"
+                "pattern": "^https:\\/\\/github\\.com\\/[^\\s?#]+$"
               },
               "title": {
                 "type": "string"
@@ -303,7 +316,7 @@
               },
               "url": {
                 "type": "string",
-                "format": "uri"
+                "pattern": "^https:\\/\\/github\\.com\\/[^\\s?#]+$"
               },
               "title": {
                 "type": "string"
@@ -348,7 +361,7 @@
               },
               "url": {
                 "type": "string",
-                "format": "uri"
+                "pattern": "^https:\\/\\/github\\.com\\/[^\\s?#]+$"
               },
               "title": {
                 "type": "string"
@@ -393,7 +406,7 @@
               },
               "url": {
                 "type": "string",
-                "format": "uri"
+                "pattern": "^https:\\/\\/github\\.com\\/[^\\s?#]+$"
               },
               "title": {
                 "type": "string"
@@ -503,10 +516,13 @@
               },
               "sourceUrl": {
                 "type": "string",
-                "format": "uri"
+                "pattern": "^https:\\/\\/github\\.com\\/[^\\s?#]+$"
               }
             },
-            "required": ["status", "sourceUrl"],
+            "required": [
+              "status",
+              "sourceUrl"
+            ],
             "additionalProperties": false
           },
           {
@@ -520,7 +536,7 @@
                 "anyOf": [
                   {
                     "type": "string",
-                    "format": "uri"
+                    "pattern": "^https:\\/\\/github\\.com\\/[^\\s?#]+$"
                   },
                   {
                     "type": "null"
@@ -528,7 +544,9 @@
                 ]
               }
             },
-            "required": ["status"],
+            "required": [
+              "status"
+            ],
             "additionalProperties": false
           },
           {
@@ -542,7 +560,7 @@
                 "anyOf": [
                   {
                     "type": "string",
-                    "format": "uri"
+                    "pattern": "^https:\\/\\/github\\.com\\/[^\\s?#]+$"
                   },
                   {
                     "type": "null"
@@ -550,7 +568,9 @@
                 ]
               }
             },
-            "required": ["status"],
+            "required": [
+              "status"
+            ],
             "additionalProperties": false
           }
         ]
@@ -607,7 +627,12 @@
           ]
         }
       },
-      "required": ["stars", "forks", "watchers", "observedAt"],
+      "required": [
+        "stars",
+        "forks",
+        "watchers",
+        "observedAt"
+      ],
       "additionalProperties": false
     },
     "pagination": {
@@ -625,7 +650,10 @@
               "type": "boolean"
             }
           },
-          "required": ["fetched", "truncated"],
+          "required": [
+            "fetched",
+            "truncated"
+          ],
           "additionalProperties": false
         },
         "authoredPullRequests": {
@@ -640,7 +668,10 @@
               "type": "boolean"
             }
           },
-          "required": ["fetched", "truncated"],
+          "required": [
+            "fetched",
+            "truncated"
+          ],
           "additionalProperties": false
         },
         "mergedPullRequests": {
@@ -655,7 +686,10 @@
               "type": "boolean"
             }
           },
-          "required": ["fetched", "truncated"],
+          "required": [
+            "fetched",
+            "truncated"
+          ],
           "additionalProperties": false
         },
         "reviews": {
@@ -670,7 +704,10 @@
               "type": "boolean"
             }
           },
-          "required": ["fetched", "truncated"],
+          "required": [
+            "fetched",
+            "truncated"
+          ],
           "additionalProperties": false
         },
         "openedIssues": {
@@ -685,7 +722,10 @@
               "type": "boolean"
             }
           },
-          "required": ["fetched", "truncated"],
+          "required": [
+            "fetched",
+            "truncated"
+          ],
           "additionalProperties": false
         },
         "closedIssues": {
@@ -700,7 +740,10 @@
               "type": "boolean"
             }
           },
-          "required": ["fetched", "truncated"],
+          "required": [
+            "fetched",
+            "truncated"
+          ],
           "additionalProperties": false
         },
         "issueComments": {
@@ -715,7 +758,10 @@
               "type": "boolean"
             }
           },
-          "required": ["fetched", "truncated"],
+          "required": [
+            "fetched",
+            "truncated"
+          ],
           "additionalProperties": false
         }
       },
@@ -748,7 +794,11 @@
             "minLength": 1
           }
         },
-        "required": ["code", "resource", "message"],
+        "required": [
+          "code",
+          "resource",
+          "message"
+        ],
         "additionalProperties": false
       }
     }

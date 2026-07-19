@@ -2,10 +2,22 @@ import { z } from "zod";
 
 const githubUrl = z
   .string()
-  .url()
+  .regex(/^https:\/\/github\.com\/[^\s?#]+$/)
   .refine((v) => {
-    const u = new URL(v);
-    const seg = u.pathname.split("/").filter(Boolean);
+    let u: URL;
+    try {
+      u = new URL(v);
+    } catch {
+      return false;
+    }
+    const rawPath = u.pathname;
+    let decoded: string;
+    try {
+      decoded = decodeURIComponent(rawPath);
+    } catch {
+      return false;
+    }
+    const seg = decoded.split("/").filter(Boolean);
     return (
       u.protocol === "https:" &&
       u.hostname === "github.com" &&
@@ -14,14 +26,30 @@ const githubUrl = z
       !u.port &&
       !u.search &&
       !u.hash &&
-      !u.pathname.endsWith("/") &&
-      !seg.some((s) => s === "." || s === "..")
+      !rawPath.endsWith("/") &&
+      !rawPath.includes("//") &&
+      !seg.some((s) => s === "." || s === "..") &&
+      !/%2e|%2f/i.test(rawPath)
     );
   });
 const utc = z
   .string()
   .regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?Z$/)
-  .refine((v) => !Number.isNaN(Date.parse(v)));
+  .refine((v) => {
+    const m = v.match(
+      /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.(\d{1,3}))?Z$/,
+    );
+    if (!m) return false;
+    const d = new Date(v);
+    return (
+      d.getUTCFullYear() === +m[1] &&
+      d.getUTCMonth() + 1 === +m[2] &&
+      d.getUTCDate() === +m[3] &&
+      d.getUTCHours() === +m[4] &&
+      d.getUTCMinutes() === +m[5] &&
+      d.getUTCSeconds() === +m[6]
+    );
+  });
 const keys = [
   "releases",
   "authoredPullRequests",
