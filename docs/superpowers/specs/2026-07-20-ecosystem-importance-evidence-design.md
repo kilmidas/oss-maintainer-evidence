@@ -1,7 +1,7 @@
 # Ecosystem Importance Evidence Design
 
-**Status:** Owner approved  
-**Date:** 2026-07-20  
+**Status:** Owner approved
+**Date:** 2026-07-20
 **Scope:** Public, source-linked rationale for `oss-maintainer-evidence`
 
 ## Summary
@@ -135,29 +135,37 @@ consistency artifact; neither file is generated from the other in this scope.
 The first version will use a small, high-quality set instead of collecting many
 weak references:
 
-1. **Linux Foundation Research, Open Source Maintainers**  
-   `https://www.linuxfoundation.org/research/open-source-maintainers`  
+1. **Linux Foundation Research, Open Source Maintainers**
+
+   `https://www.linuxfoundation.org/research/open-source-maintainers`
+
    Supports the maintainer-role, transparency, documentation, and sustainable
    support context. The underlying study is qualitative and must not be treated
    as a population estimate.
 
-2. **CHAOSS Starter Project Health Metrics Model**  
-   `https://www.chaoss.community/starter-project-health-metrics-model/`  
+2. **CHAOSS Starter Project Health Metrics Model**
+
+   `https://www.chaoss.community/starter-project-health-metrics-model/`
+
    Supports the proposition that response time, change-request handling,
    contributor concentration, and release frequency are recognized project
    health signals. This project collects only a subset and does not implement or
    certify the CHAOSS model.
 
-3. **OpenSSF Scorecard documentation**  
-   `https://openssf.org/scorecard/`  
+3. **OpenSSF Scorecard documentation**
+
+   `https://openssf.org/scorecard/`
+
    Supports the value of automated, inspectable signals for informing user
    decisions. Scorecard assesses security practices; this project reports
    maintenance activity, so the relationship is contextual rather than
    equivalent.
 
 4. **A Toolkit for Measuring the Impacts of Public Funding on Open Source
-   Software Development**  
-   `https://arxiv.org/abs/2411.06027`  
+   Software Development**
+
+   `https://arxiv.org/abs/2411.06027`
+
    Supports the measurement gap around open-source funding impact and the need
    to align evidence with goals, context, and project life stage. The source is
    labeled as a research paper, and its review status must be stated accurately.
