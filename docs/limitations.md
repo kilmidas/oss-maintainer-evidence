@@ -23,4 +23,6 @@ A complete report means the requested contract completed without a recorded runt
 
 Counts are calculated only from listed activities. Stars, forks, watchers, contributors, and community files describe repository context, not individual maintainer credit. OSS Maintainer Evidence does not score or decide grant or program eligibility.
 
+The source-linked [ecosystem importance evidence](ecosystem-importance.md) explains why auditable maintainer activity can be useful context. It does not demonstrate external adoption, project impact, endorsement, certification, or program eligibility.
+
 Review public usernames, titles, timestamps, and URLs before publishing a report. See [attribution.md](attribution.md) for exact inclusion rules and [architecture.md](architecture.md) for safety boundaries.

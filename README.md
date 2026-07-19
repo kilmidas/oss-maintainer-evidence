@@ -4,6 +4,8 @@ OSS Maintainer Evidence is a local, read-only command-line tool that turns publi
 
 The report is evidence, not a verdict. The tool does not score or decide grant or program eligibility, and it does not predict whether an application will be accepted.
 
+Read the [Ecosystem importance evidence](docs/ecosystem-importance.md) for the source-linked problem context, current capability mapping, and explicit limits.
+
 ## Requirements
 
 - Node.js 22 or later
