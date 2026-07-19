@@ -1,29 +1,49 @@
 import { z } from "zod";
 import type { Report } from "../domain/report.js";
 
-const repo = z
+const repositoryResponseSchema = z
   .object({
-    full_name: z.string(),
-    description: z.string().nullable().optional(),
+    full_name: z.string().min(3),
+    description: z.string().nullable(),
     html_url: z.string().url(),
-    default_branch: z.string().optional(),
     stargazers_count: z.number().int().nonnegative().optional(),
     forks_count: z.number().int().nonnegative().optional(),
     subscribers_count: z.number().int().nonnegative().optional(),
-    watchers_count: z.number().int().nonnegative().optional(),
   })
-  .passthrough();
-const release = z
+  .strip();
+
+const releaseResponseSchema = z
   .object({
-    id: z.union([z.string(), z.number()]),
-    name: z.string().optional(),
+    id: z.union([z.string().min(1), z.number().int().nonnegative()]),
+    name: z.string().nullable().optional(),
+    tag_name: z.string().optional(),
     html_url: z.string().url(),
     draft: z.boolean(),
     published_at: z.string().nullable().optional(),
-    author: z.object({ login: z.string() }).nullable().optional(),
+    author: z
+      .object({ login: z.string().min(1) })
+      .nullable()
+      .optional(),
   })
-  .passthrough();
-type Input = {
+  .strip();
+
+const profileFileSchema = z.object({ html_url: z.string().url() }).strip();
+const communityProfileSchema = z
+  .object({
+    files: z
+      .object({
+        readme: profileFileSchema.nullable().optional(),
+        license: profileFileSchema.nullable().optional(),
+        contributing: profileFileSchema.nullable().optional(),
+        code_of_conduct: profileFileSchema.nullable().optional(),
+        issue_template: profileFileSchema.nullable().optional(),
+        pull_request_template: profileFileSchema.nullable().optional(),
+      })
+      .strip(),
+  })
+  .strip();
+
+export interface RepositoryCollectionInput {
   owner: string;
   repo: string;
   maintainer: string;
@@ -32,189 +52,288 @@ type Input = {
   maxItems: number;
   observedAt: string;
   defaultBranch: string;
-};
-type Page<T> = { items: T[]; fetched: number; truncated: boolean };
-export interface CollectionDeps {
-  getRepository(): Promise<unknown>;
-  listReleases(): Promise<Page<unknown>>;
-  getCommunityProfile(): Promise<unknown>;
-  getContent(path: string): Promise<unknown>;
-  listContributors(): Promise<Page<unknown>>;
 }
-const paths = [
-  "README.md",
-  "LICENSE",
-  "CONTRIBUTING.md",
-  "SECURITY.md",
-  ".github/SECURITY.md",
-  "docs/SECURITY.md",
-] as const;
-export async function collectRepository(input: Input, deps: CollectionDeps) {
-  const limitations: Report["limitations"] = [];
-  let partial = false;
-  const r = repo.parse(await deps.getRepository());
-  const repository = {
+
+export interface Page<T> {
+  items: T[];
+  fetched: number;
+  truncated: boolean;
+}
+
+export type ContentResult =
+  | { status: "present"; sourceUrl: string }
+  | { status: "absent" }
+  | { status: "unavailable" };
+
+export interface RepositoryCollectionDeps {
+  getRepository(): Promise<unknown>;
+  listReleases(maxItems: number): Promise<Page<unknown>>;
+  getCommunityProfile(): Promise<unknown>;
+  getContent(path: string): Promise<ContentResult>;
+  listContributors(maxItems: number): Promise<Page<unknown>>;
+}
+
+export interface ReleaseEvidence {
+  id: string;
+  type: "release";
+  actor: string;
+  occurredAt: string;
+  url: string;
+  title: string;
+  attributionRule: string;
+}
+
+const communityMap = {
+  readme: "readme",
+  license: "license",
+  contributing: "contributing",
+  codeOfConduct: "code_of_conduct",
+  issueTemplate: "issue_template",
+  pullRequestTemplate: "pull_request_template",
+} as const;
+
+const safeRepositoryUrl = (value: string, owner: string, repo: string) => {
+  let url: URL;
+  try {
+    url = new URL(value);
+  } catch {
+    return false;
+  }
+  return (
+    url.protocol === "https:" &&
+    url.hostname === "github.com" &&
+    !url.username &&
+    !url.password &&
+    !url.port &&
+    !url.search &&
+    !url.hash &&
+    url.pathname.toLowerCase() === `/${owner}/${repo}`.toLowerCase()
+  );
+};
+
+const safeChildUrl = (value: string, repositoryUrl: string) => {
+  let url: URL;
+  try {
+    url = new URL(value);
+  } catch {
+    return false;
+  }
+  const prefix = `${new URL(repositoryUrl).pathname.toLowerCase()}/`;
+  return (
+    url.protocol === "https:" &&
+    url.hostname === "github.com" &&
+    !url.username &&
+    !url.password &&
+    !url.port &&
+    !url.search &&
+    !url.hash &&
+    url.pathname.toLowerCase().startsWith(prefix) &&
+    !/%2e|%2f/i.test(url.pathname) &&
+    !url.pathname.split("/").some((part) => part === "." || part === "..")
+  );
+};
+
+const limitation = (code: string, resource: string, message: string) => ({
+  code,
+  resource,
+  message,
+});
+
+export async function collectRepository(
+  input: RepositoryCollectionInput,
+  deps: RepositoryCollectionDeps,
+) {
+  const since = Date.parse(input.since);
+  const until = Date.parse(input.until);
+  if (!Number.isFinite(since) || !Number.isFinite(until) || since > until)
+    throw new Error("invalid collection window");
+
+  const rawRepository = repositoryResponseSchema.parse(
+    await deps.getRepository(),
+  );
+  if (!safeRepositoryUrl(rawRepository.html_url, input.owner, input.repo))
+    throw new Error("invalid repository source URL");
+
+  const repository: Report["repository"] = {
     owner: input.owner,
     name: input.repo,
-    fullName: r.full_name,
-    description: r.description ?? null,
-    sourceUrl: `https://github.com/${input.owner}/${input.repo}`,
+    fullName: rawRepository.full_name,
+    description: rawRepository.description,
+    sourceUrl: rawRepository.html_url,
     observedAt: input.observedAt,
   };
-  const releases: Array<{
-    id: string;
-    type: "release";
-    actor: string;
-    occurredAt: string;
-    url: string;
-    title: string;
-    attributionRule: string;
-  }> = [];
-  const page = await deps.listReleases();
-  for (const raw of page.items) {
-    const x = release.safeParse(raw);
-    if (!x.success) {
-      limitations.push({
-        code: "malformed_release",
-        resource: "releases",
-        message: "Malformed release",
-      });
+  const limitations: Report["limitations"] = [];
+  let partial = false;
+
+  const releasePage = await deps.listReleases(input.maxItems);
+  const releases: ReleaseEvidence[] = [];
+  for (const raw of releasePage.items) {
+    const parsed = releaseResponseSchema.parse(raw);
+    if (parsed.draft || !parsed.published_at) continue;
+    const occurred = Date.parse(parsed.published_at);
+    if (!Number.isFinite(occurred)) {
       partial = true;
+      limitations.push(
+        limitation(
+          "release_timestamp_unavailable",
+          "releases",
+          "A published release had an invalid publication timestamp.",
+        ),
+      );
       continue;
     }
-    const v = x.data;
-    const at = v.published_at;
-    const ms = at ? Date.parse(at) : NaN;
-    const lo = Date.parse(input.since),
-      hi = Date.parse(input.until);
-    const canonical = `https://github.com/${input.owner}/${input.repo}/releases/${v.id}`;
+    if (!parsed.author) {
+      partial = true;
+      limitations.push(
+        limitation(
+          "release_actor_unavailable",
+          "releases",
+          "A published release did not expose its author.",
+        ),
+      );
+      continue;
+    }
     if (
-      v.draft ||
-      !at ||
-      !Number.isFinite(ms) ||
-      ms < lo ||
-      ms > hi ||
-      !v.author ||
-      v.author.login.toLowerCase() !== input.maintainer.toLowerCase()
+      occurred < since ||
+      occurred > until ||
+      parsed.author.login.toLowerCase() !== input.maintainer.toLowerCase()
     )
       continue;
+    if (
+      !safeChildUrl(parsed.html_url, repository.sourceUrl) ||
+      !new URL(parsed.html_url).pathname.toLowerCase().includes("/releases/")
+    )
+      throw new Error("invalid release source URL");
     releases.push({
-      id: String(v.id),
+      id: String(parsed.id),
       type: "release",
-      actor: v.author.login,
-      occurredAt: new Date(ms).toISOString(),
-      url: canonical,
-      title: v.name ?? "",
-      attributionRule: "release.author.login",
+      actor: parsed.author.login,
+      occurredAt: new Date(occurred).toISOString(),
+      url: parsed.html_url,
+      title: parsed.name ?? parsed.tag_name ?? "Untitled release",
+      attributionRule: "release.author.login and release.published_at",
     });
   }
-  if (page.truncated) {
+  if (releasePage.truncated) {
     partial = true;
-    limitations.push({
-      code: "releases_truncated",
-      resource: "releases",
-      message: "Release list truncated",
-    });
+    limitations.push(
+      limitation(
+        "releases_truncated",
+        "releases",
+        "Release collection reached the configured item limit.",
+      ),
+    );
   }
-  const community: Record<string, unknown> = {};
-  let profile: Record<string, unknown> = {};
+
+  const community: Report["community"] = {};
   try {
-    const p = await deps.getCommunityProfile();
-    profile = (p && typeof p === "object" ? p : {}) as Record<string, unknown>;
+    const profile = communityProfileSchema.parse(
+      await deps.getCommunityProfile(),
+    );
+    for (const [reportKey, apiKey] of Object.entries(communityMap)) {
+      const file = profile.files[apiKey as keyof typeof profile.files];
+      community[reportKey] =
+        file && safeChildUrl(file.html_url, repository.sourceUrl)
+          ? { status: "present", sourceUrl: file.html_url }
+          : { status: "absent" };
+    }
   } catch {
     partial = true;
-    limitations.push({
-      code: "community_unavailable",
-      resource: "communityProfile",
-      message: "Community profile unavailable",
-    });
+    for (const reportKey of Object.keys(communityMap))
+      community[reportKey] = { status: "unavailable" };
+    limitations.push(
+      limitation(
+        "community_profile_unavailable",
+        "communityProfile",
+        "GitHub community profile metadata was unavailable.",
+      ),
+    );
   }
-  const files = (
-    profile.files && typeof profile.files === "object" ? profile.files : {}
-  ) as Record<string, unknown>;
-  const map: Record<string, string> = {
-    readme: "readme",
-    license: "license",
-    contributing: "contributing",
-    codeOfConduct: "code_of_conduct",
-    issueTemplate: "issue_template",
-    pullRequestTemplate: "pull_request_template",
-  };
-  for (const k of [
-    "readme",
-    "license",
-    "contributing",
-    "securityPolicy",
-    "codeOfConduct",
-    "issueTemplate",
-    "pullRequestTemplate",
+
+  let securityUnavailable = false;
+  let securityPresent = false;
+  for (const path of [
+    "SECURITY.md",
+    ".github/SECURITY.md",
+    "docs/SECURITY.md",
   ]) {
-    const f = files[map[k]];
-    const u =
-      f && typeof f === "object"
-        ? ((f as Record<string, unknown>).html_url ??
-          (f as Record<string, unknown>).url)
-        : undefined;
-    community[k] =
-      typeof u === "string" && u.startsWith(`${repository.sourceUrl}/`)
-        ? { status: "present", sourceUrl: u }
-        : { status: "absent" };
-  }
-  for (const p of paths) {
+    let result: ContentResult;
     try {
-      const c = await deps.getContent(p);
-      if (
-        c &&
-        typeof c === "object" &&
-        "status" in c &&
-        (c as { status?: unknown }).status === "unavailable"
-      ) {
-        partial = true;
-        continue;
-      }
-      const key = p.includes("SECURITY") ? "securityPolicy" : p;
-      if (key in community)
-        community[key] = {
-          status: "present",
-          sourceUrl: `${repository.sourceUrl}/blob/${input.defaultBranch}/${p}`,
-        };
+      result = await deps.getContent(path);
     } catch {
-      if (
-        p === "SECURITY.md" ||
-        p === ".github/SECURITY.md" ||
-        p === "docs/SECURITY.md"
-      )
-        continue;
+      result = { status: "unavailable" };
     }
+    if (result.status === "present") {
+      if (!safeChildUrl(result.sourceUrl, repository.sourceUrl))
+        throw new Error("invalid security policy source URL");
+      community.securityPolicy = {
+        status: "present",
+        sourceUrl: result.sourceUrl,
+      };
+      securityPresent = true;
+      break;
+    }
+    if (result.status === "unavailable") securityUnavailable = true;
   }
-  const contributors = await deps.listContributors();
-  const adoption = {
-    stars: r.stargazers_count ?? null,
-    forks: r.forks_count ?? null,
-    watchers: r.subscribers_count ?? r.watchers_count ?? null,
-    observedAt: input.observedAt,
-  };
-  const pagination = {
-    releases: { fetched: page.fetched, truncated: page.truncated },
-    authoredPullRequests: { fetched: 0, truncated: false },
-    mergedPullRequests: { fetched: 0, truncated: false },
-    reviews: { fetched: 0, truncated: false },
-    openedIssues: { fetched: 0, truncated: false },
-    closedIssues: { fetched: 0, truncated: false },
-    issueComments: { fetched: 0, truncated: false },
-  };
-  if (contributors.truncated)
-    limitations.push({
-      code: "contributors_truncated",
-      resource: "contributors",
-      message: "Contributor list truncated",
-    });
+  if (!securityPresent) {
+    if (securityUnavailable) {
+      partial = true;
+      community.securityPolicy = { status: "unavailable" };
+      limitations.push(
+        limitation(
+          "security_policy_unavailable",
+          "securityPolicy",
+          "Security policy fallback paths could not all be checked.",
+        ),
+      );
+    } else community.securityPolicy = { status: "absent" };
+  }
+
+  let contributorPagination: Page<unknown> | null = null;
+  try {
+    contributorPagination = await deps.listContributors(input.maxItems);
+    if (contributorPagination.truncated) {
+      partial = true;
+      limitations.push(
+        limitation(
+          "contributors_truncated",
+          "contributors",
+          "Contributor collection reached the configured item limit.",
+        ),
+      );
+    }
+  } catch {
+    partial = true;
+    limitations.push(
+      limitation(
+        "contributors_unavailable",
+        "contributors",
+        "Visible contributor data was unavailable.",
+      ),
+    );
+  }
+
   return {
     repository,
     releases,
     community,
-    adoption,
-    pagination,
+    adoption: {
+      stars: rawRepository.stargazers_count ?? null,
+      forks: rawRepository.forks_count ?? null,
+      watchers: rawRepository.subscribers_count ?? null,
+      observedAt: input.observedAt,
+    } satisfies Report["adoption"],
+    releasePagination: {
+      fetched: releasePage.fetched,
+      truncated: releasePage.truncated,
+    },
+    contributorPagination: contributorPagination
+      ? {
+          fetched: contributorPagination.fetched,
+          truncated: contributorPagination.truncated,
+        }
+      : { fetched: 0, truncated: false },
+    visibleContributors: contributorPagination?.items.length ?? null,
     limitations,
     partial,
   };
