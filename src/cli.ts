@@ -24,6 +24,25 @@ function isErrorConstructor(value: unknown): boolean {
   return typeof value === "function" && value.prototype instanceof Error;
 }
 
+function hasExitCode(value: unknown, expected: number): boolean {
+  if (!isErrorConstructor(value)) {
+    return false;
+  }
+
+  try {
+    const error = new (
+      value as new (
+        ...args: unknown[]
+      ) => Error & {
+        exitCode?: unknown;
+      }
+    )("Collection startup validation", null);
+    return error.exitCode === expected;
+  } catch {
+    return false;
+  }
+}
+
 async function runCollect(args: readonly string[]): Promise<void> {
   let collectionModules: [
     typeof import("./domain/input.js"),
@@ -41,6 +60,11 @@ async function runCollect(args: readonly string[]): Promise<void> {
       !isErrorConstructor(errorModule.InputError) ||
       !isErrorConstructor(errorModule.OperationalError) ||
       !isErrorConstructor(errorModule.RequiredCollectionError) ||
+      !hasExitCode(errorModule.InputError, 2) ||
+      !hasExitCode(errorModule.OutOfScopeError, 2) ||
+      !hasExitCode(errorModule.RequiredCollectionError, 3) ||
+      !hasExitCode(errorModule.PartialCollectionError, 4) ||
+      !hasExitCode(errorModule.OutputWriteError, 5) ||
       typeof errorModule.sanitizeErrorMessage !== "function"
     ) {
       throw new Error("Invalid collection module exports.");

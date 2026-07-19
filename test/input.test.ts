@@ -150,6 +150,10 @@ test("input normalizes leap seconds with offsets and fractional milliseconds", (
       since: "2017-01-01T08:59:60.5+09:00",
       expected: "2017-01-01T00:00:00.500Z",
     },
+    {
+      since: "1972-07-01T08:59:60+09:00",
+      expected: "1972-07-01T00:00:00.000Z",
+    },
   ];
 
   for (const { since, expected } of cases) {
@@ -168,6 +172,7 @@ test("input rejects malformed, invalid-date, and future leap seconds", () => {
     "2016-02-30T23:59:60Z",
     "2016-12-31T12:34:60Z",
     "2016-12-30T23:59:60Z",
+    "2017-06-30T23:59:60Z",
     "2016-12-31T23:59:60.0000Z",
   ]) {
     assert.throws(
@@ -549,6 +554,28 @@ const malformedCollectionModules = [
       writeFileSync(
         resolve(installedDist, "errors.js"),
         "export class InputError extends Error {}\n",
+      );
+    },
+  },
+  {
+    label: "missing numeric error codes",
+    writeModules(installedDist: string) {
+      copyFileSync(
+        resolve(projectRoot, "dist/domain/input.js"),
+        resolve(installedDist, "domain/input.js"),
+      );
+      writeFileSync(
+        resolve(installedDist, "errors.js"),
+        [
+          "export class InputError extends Error {}",
+          "export class OutOfScopeError extends Error {}",
+          "export class OperationalError extends Error {}",
+          "export class RequiredCollectionError extends Error {}",
+          "export class PartialCollectionError extends Error {}",
+          "export class OutputWriteError extends Error {}",
+          "export const sanitizeErrorMessage = (message) => message;",
+          "",
+        ].join("\n"),
       );
     },
   },

@@ -27,6 +27,35 @@ const ACCOUNT_NAME = /^[A-Za-z0-9-]{1,39}$/;
 const REPOSITORY_NAME = /^[A-Za-z0-9._-]{1,100}$/;
 const ABSOLUTE_TIMESTAMP =
   /^(\d{4})-(\d{2})-(\d{2})[Tt](\d{2}):(\d{2}):(\d{2})(?:\.(\d{1,3}))?([Zz]|([+-])(\d{2}):(\d{2}))$/;
+const LEAP_SECOND_DATES = new Set([
+  "1972-06-30",
+  "1972-12-31",
+  "1973-12-31",
+  "1974-12-31",
+  "1975-12-31",
+  "1976-12-31",
+  "1977-12-31",
+  "1978-12-31",
+  "1979-12-31",
+  "1981-06-30",
+  "1982-06-30",
+  "1983-06-30",
+  "1985-06-30",
+  "1987-12-31",
+  "1989-12-31",
+  "1990-12-31",
+  "1992-06-30",
+  "1993-06-30",
+  "1994-06-30",
+  "1995-12-31",
+  "1997-06-30",
+  "1998-12-31",
+  "2005-12-31",
+  "2008-12-31",
+  "2012-06-30",
+  "2015-06-30",
+  "2016-12-31",
+]);
 
 const OPTIONS = new Set([
   "--maintainer",
@@ -160,9 +189,13 @@ function parseAbsoluteSince(value: string, untilMilliseconds: number): string {
       : offsetSign * (offsetHour * 60 + offsetMinute) * 60 * 1000;
   const normalizedMilliseconds = wallClock.getTime() - offsetMilliseconds;
   if (isLeapSecond) {
+    if (!Number.isFinite(normalizedMilliseconds)) {
+      throw invalidInput("Since timestamp is invalid.");
+    }
     const beforeLeapSecond = new Date(normalizedMilliseconds);
     const afterLeapSecond = new Date(normalizedMilliseconds + 1000);
     if (
+      !LEAP_SECOND_DATES.has(beforeLeapSecond.toISOString().slice(0, 10)) ||
       beforeLeapSecond.getUTCHours() !== 23 ||
       beforeLeapSecond.getUTCMinutes() !== 59 ||
       beforeLeapSecond.getUTCSeconds() !== 59 ||
