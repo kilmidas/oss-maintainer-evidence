@@ -89,6 +89,15 @@ A report contains:
 
 JSON output is validated against [schema/report-v1.json](schema/report-v1.json). See [attribution rules](docs/attribution.md) for the exact actor and timestamp requirements.
 
+## Example reports
+
+The repository includes real reports generated from its own public GitHub activity on 2026-07-19:
+
+- [Markdown example](examples/oss-maintainer-evidence.md)
+- [JSON example](examples/oss-maintainer-evidence.json)
+
+The two files come from separate CLI invocations, so their observation timestamps differ slightly. Both preserve the repository's small or zero adoption values and link every listed activity to public source evidence.
+
 ## Exit codes
 
 | Code | Meaning | Report emitted |
@@ -119,7 +128,7 @@ The first release intentionally covers one public GitHub.com repository at a tim
 
 ## Roadmap
 
-- Publish a real report generated from this repository after the first public release.
+- Publish a follow-up report after a justified maintenance release.
 - Add signed-out link verification for example evidence.
 - Evaluate additional public providers only after the GitHub contract is stable.
 - Consider npm registry publication only after demand and publisher identity are established.
