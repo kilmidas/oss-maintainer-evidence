@@ -167,6 +167,7 @@ export const reportSchema = z
         stars: z.number().int().nonnegative().nullable(),
         forks: z.number().int().nonnegative().nullable(),
         watchers: z.number().int().nonnegative().nullable(),
+        contributors: z.number().int().nonnegative().nullable(),
         observedAt: utc.nullable(),
       })
       .strict(),

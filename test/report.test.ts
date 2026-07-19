@@ -30,6 +30,7 @@ const base = {
     stars: null,
     forks: 3,
     watchers: null,
+    contributors: 1,
     observedAt: "2026-01-31T00:00:00.000Z",
   },
   pagination: {

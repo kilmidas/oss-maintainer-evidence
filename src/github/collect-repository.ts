@@ -338,6 +338,7 @@ export async function collectRepository(
       forks: rawRepository.forks_count ?? null,
       watchers:
         rawRepository.subscribers_count ?? rawRepository.watchers_count ?? null,
+      contributors: contributorPagination?.items.length ?? null,
       observedAt: input.observedAt,
     } satisfies Report["adoption"],
     pagination: {
@@ -352,7 +353,6 @@ export async function collectRepository(
           }
         : { fetched: 0, truncated: false },
     },
-    visibleContributors: contributorPagination?.items.length ?? null,
     limitations,
     partial,
   };

@@ -85,9 +85,10 @@ test("collects inclusive published releases and observed adoption", async () => 
     stars: 2,
     forks: 1,
     watchers: 4,
+    contributors: 1,
     observedAt: input.observedAt,
   });
-  assert.equal(result.visibleContributors, 1);
+  assert.equal(result.adoption.contributors, 1);
   assert.equal(releaseLimit, 10);
   assert.equal(contributorLimit, 10);
 });
@@ -194,7 +195,7 @@ test("marks optional profile, security and contributors unavailable", async () =
   assert.equal(result.partial, true);
   assert.equal(result.community.readme.status, "unavailable");
   assert.equal(result.community.securityPolicy.status, "unavailable");
-  assert.equal(result.visibleContributors, null);
+  assert.equal(result.adoption.contributors, null);
   assert.deepEqual(
     result.limitations.map(({ code }) => code),
     [
@@ -224,7 +225,7 @@ test("surfaces release and contributor truncation without hidden over-count", as
   assert.equal(result.partial, true);
   assert.equal(result.pagination.releases.truncated, true);
   assert.equal(result.pagination.contributors.truncated, true);
-  assert.equal(result.visibleContributors, 2);
+  assert.equal(result.adoption.contributors, 2);
   assert.deepEqual(
     result.limitations.map(({ code }) => code),
     ["releases_truncated", "contributors_truncated"],
@@ -245,4 +246,5 @@ test("preserves unknown adoption values as null", async () => {
   assert.equal(result.adoption.stars, null);
   assert.equal(result.adoption.forks, null);
   assert.equal(result.adoption.watchers, null);
+  assert.equal(result.adoption.contributors, 1);
 });
