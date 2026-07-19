@@ -5,7 +5,6 @@
     "clientKind": "git",
     "useIgnoreFile": true
   },
-  "files": { "ignore": ["schema/report-v1.json"] },
   "formatter": {
     "enabled": true,
     "indentStyle": "space"
