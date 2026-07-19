@@ -12,6 +12,7 @@ const stable = (v: unknown): string => {
     )
     .join(",")}}`;
 };
+
 export { reportSchema } from "./report.js";
 export function aggregateEvidence(
   input: Omit<Report, "schemaVersion" | "generatedAt" | "summary"> & {
