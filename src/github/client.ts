@@ -29,6 +29,7 @@ const nextUrl = (link?: string) =>
 const endpointFromUrl = (
   url: string,
   contract: typeof ENDPOINTS.releases | typeof ENDPOINTS.searchIssues,
+  expected?: Record<string, string | number>,
 ): BuiltEndpoint => {
   if (/^https:\/\/[^/]*:\d+(?:\/|$)/i.test(url))
     throw new GhApiError("protocol");
@@ -45,6 +46,13 @@ const endpointFromUrl = (
     if (u.pathname !== "/search/issues") throw new GhApiError("protocol");
     const q = u.searchParams.get("q");
     if (!q) throw new GhApiError("protocol");
+    for (const key of ["q", "sort", "order"]) {
+      if (
+        expected?.[key] !== undefined &&
+        u.searchParams.get(key) !== String(expected[key])
+      )
+        throw new GhApiError("protocol");
+    }
     return buildEndpoint(contract, {
       q,
       page: Number(u.searchParams.get("page") ?? 1),
@@ -74,8 +82,11 @@ export class GithubClient {
     if (
       !parsed.success ||
       parsed.data.private ||
-      parsed.data.visibility === "private" ||
-      parsed.data.html_url !== `https://github.com/${owner}/${repo}`
+      parsed.data.visibility !== "public" ||
+      parsed.data.full_name.toLowerCase() !==
+        `${owner}/${repo}`.toLowerCase() ||
+      parsed.data.html_url.toLowerCase() !==
+        `https://github.com/${owner}/${repo}`.toLowerCase()
     )
       throw new GhApiError("protocol");
     return {
@@ -106,7 +117,9 @@ export class GithubClient {
       const remaining = maxItems - items.length;
       items.push(...page.slice(0, Math.max(0, remaining)));
       const next = nextUrl(response.link);
-      const nextEndpoint = next ? endpointFromUrl(next, contract) : undefined;
+      const nextEndpoint = next
+        ? endpointFromUrl(next, contract, params)
+        : undefined;
       if (items.length >= maxItems) {
         truncated = Boolean(next || page.length > remaining);
         break;
