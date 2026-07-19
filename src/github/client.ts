@@ -30,6 +30,8 @@ const endpointFromUrl = (
   url: string,
   contract: typeof ENDPOINTS.releases | typeof ENDPOINTS.searchIssues,
 ): BuiltEndpoint => {
+  if (/^https:\/\/[^/]*:\d+(?:\/|$)/i.test(url))
+    throw new GhApiError("protocol");
   const u = new URL(url);
   if (
     u.protocol !== "https:" ||
@@ -104,12 +106,14 @@ export class GithubClient {
       const remaining = maxItems - items.length;
       items.push(...page.slice(0, Math.max(0, remaining)));
       const next = nextUrl(response.link);
+      const nextEndpoint = next ? endpointFromUrl(next, contract) : undefined;
       if (items.length >= maxItems) {
         truncated = Boolean(next || page.length > remaining);
         break;
       }
       if (!next) break;
-      endpoint = endpointFromUrl(next, contract);
+      if (!nextEndpoint) throw new GhApiError("protocol");
+      endpoint = nextEndpoint;
     }
     return { items, fetched: items.length, truncated };
   }
