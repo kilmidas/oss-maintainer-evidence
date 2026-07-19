@@ -26,7 +26,10 @@ const pullDetailSchema = z
 
 const reviewSchema = z
   .object({
-    id: z.union([z.string().min(1), z.number().int().nonnegative()]),
+    id: z.union([
+      z.string().regex(/^\d+$/),
+      z.number().int().nonnegative().safe(),
+    ]),
     user: z.object({ login: z.string().min(1) }).nullable(),
     submitted_at: z.string().nullable().optional(),
     html_url: z.string().url(),
@@ -112,7 +115,7 @@ const reviewUrl = (
     !url.search &&
     url.pathname.toLowerCase() ===
       `/${owner}/${repo}/pull/${number}`.toLowerCase() &&
-    (!url.hash || url.hash === `#pullrequestreview-${id}`)
+    url.hash === `#pullrequestreview-${id}`
   );
 };
 

@@ -220,6 +220,25 @@ test("fails closed when required detail or review-list requests fail", async () 
       }),
     ),
   );
+  await assert.rejects(
+    collectPulls(
+      input,
+      deps({
+        listReviews: async () => ({
+          items: [
+            {
+              id: 99,
+              user: { login: "Alice" },
+              submitted_at: "2024-06-01T00:00:00Z",
+              html_url: "https://github.com/acme/demo/pull/7",
+            },
+          ],
+          fetched: 1,
+          truncated: false,
+        }),
+      }),
+    ),
+  );
 });
 
 test("surfaces every capped search and review page as partial", async () => {
