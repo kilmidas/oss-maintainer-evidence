@@ -7,6 +7,12 @@ All notable changes to this project are documented in this file. The format foll
 ### Added
 
 - A reusable read-only GitHub workflow collects and verifies public maintainer evidence without checking out caller code.
+- The recommended caller pins the workflow to an immutable commit and forwards no user-managed secrets.
+- A scheduled and manual self-smoke checks integration health without representing the run as external adoption.
+
+### Documentation
+
+- Added convenience and checksum-plus-attestation release execution paths.
 
 ## [0.2.0] - 2026-07-20
 
@@ -37,5 +43,6 @@ All notable changes to this project are documented in this file. The format foll
 - Package installation verification now works with a fresh npm cache while lifecycle scripts remain disabled.
 - Pull request and issue detail routes now accept positive safe numeric identifiers and reject invalid numeric values.
 
+[0.3.0]: https://github.com/kilmidas/oss-maintainer-evidence/releases/tag/v0.3.0
 [0.2.0]: https://github.com/kilmidas/oss-maintainer-evidence/releases/tag/v0.2.0
 [0.1.0]: https://github.com/kilmidas/oss-maintainer-evidence/releases/tag/v0.1.0

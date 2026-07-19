@@ -26,14 +26,27 @@ The application invokes `gh api` with fixed, read-only `GET` requests. It never 
 
 ### From a GitHub release
 
-Download the `.tgz` archive and matching `.sha256` file from [Releases](https://github.com/kilmidas/oss-maintainer-evidence/releases). Verify the checksum before installing:
+For a quick version check without a global install:
 
 ```sh
-shasum -a 256 -c oss-evidence-0.2.0.tgz.sha256
-npm install --global ./oss-evidence-0.2.0.tgz
+npm exec --yes --package=https://github.com/kilmidas/oss-maintainer-evidence/releases/download/v0.3.0/oss-evidence-0.3.0.tgz -- oss-evidence --version
 ```
 
-Release archives are distributed through GitHub Releases. Version `0.2.0` is not published to the npm registry.
+This convenience command does not automatically verify the archive checksum or build attestation. For a verified run, download the exact release assets, check both integrity records, and execute the downloaded local archive:
+
+```sh
+gh release download v0.3.0 --repo kilmidas/oss-maintainer-evidence \
+  --pattern 'oss-evidence-0.3.0.tgz*'
+shasum -a 256 -c oss-evidence-0.3.0.tgz.sha256
+gh attestation verify oss-evidence-0.3.0.tgz \
+  --repo kilmidas/oss-maintainer-evidence \
+  --signer-workflow kilmidas/oss-maintainer-evidence/.github/workflows/release-artifacts.yml
+npm exec --yes --package="$PWD/oss-evidence-0.3.0.tgz" -- oss-evidence --version
+```
+
+Expected output: `0.3.0`.
+
+Release archives are distributed through GitHub Releases. Version `0.3.0` is not published to the npm registry.
 
 ### From source
 
@@ -43,7 +56,7 @@ cd oss-maintainer-evidence
 npm ci
 npm run check
 npm pack --ignore-scripts
-npm install --global ./oss-evidence-0.2.0.tgz
+npm install --global ./oss-evidence-0.3.0.tgz
 ```
 
 ## Usage
@@ -86,6 +99,56 @@ oss-evidence verify evidence.json
 ```
 
 Verification revalidates the full report, reads at most 5 MiB, checks at most 2,000 unique HTTP targets with bounded concurrency and timeouts, and follows only canonical same-host redirects. It prints one deterministic `PASS` or `FAIL` line per evidence URL and never prints response bodies or arbitrary response headers.
+
+## GitHub Actions
+
+An independent maintainer can call the reusable workflow from a public repository. Pin the workflow to the immutable commit below; the `v0.3.0` comment records the corresponding release without making the execution reference movable.
+
+```yaml
+name: Maintainer evidence
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  evidence:
+    permissions:
+      contents: read
+    uses: kilmidas/oss-maintainer-evidence/.github/workflows/collect-evidence.yml@34c9dbe7f19cdb5072b9a10d84f9b5aed1e63fd7 # v0.3.0
+    with:
+      repository: owner/repository
+      maintainer: username
+      since: 90d
+      max_items: 200
+```
+
+The caller repository supplies its read-only GitHub token and pays the GitHub Actions runner usage. The called workflow checks out only its own immutable source, collects public data, verifies the report without authentication, and uploads an `oss-maintainer-evidence` artifact.
+
+The following tag-based caller is shorter, but a tag can be moved. It is a convenience form and not the recommended security path:
+
+```yaml
+name: Maintainer evidence
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  evidence:
+    permissions:
+      contents: read
+    uses: kilmidas/oss-maintainer-evidence/.github/workflows/collect-evidence.yml@v0.3.0
+    with:
+      repository: owner/repository
+      maintainer: username
+```
+
+The repository's scheduled self-smoke is not independent adoption, endorsement, or outside validation. It only checks that this public integration path still works.
 
 ## Report contents
 
@@ -133,7 +196,7 @@ Treat exit `4` as a usable report that needs human review, not as an empty resul
 
 ## Public-data and privacy model
 
-Version `0.2.0` collects only public GitHub.com data. It rejects private, internal, missing, and unsupported repositories during preflight. Authentication improves supported API access and rate limits but does not expand the product scope.
+Version `0.3.0` collects only public GitHub.com data. It rejects private, internal, missing, and unsupported repositories during preflight. Authentication improves supported API access and rate limits but does not expand the product scope.
 
 The verifier uses native HTTP requests rather than GitHub CLI or a browser. It supplies no authorization or cookie header and rejects redirects outside canonical public GitHub.com URLs.
 
