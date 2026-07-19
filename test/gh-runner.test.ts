@@ -1,18 +1,57 @@
-import test from 'node:test';
-import assert from 'node:assert/strict';
-import { EventEmitter } from 'node:events';
-import { runGhApi, GhApiError } from '../src/process/gh-runner.js';
+import assert from "node:assert/strict";
+import type { ChildProcess } from "node:child_process";
+import { EventEmitter } from "node:events";
+import test from "node:test";
+import { GhApiError, runGhApi } from "../src/process/gh-runner.js";
 
-test('uses fixed safe gh command boundary', async () => {
-  let seen: any;
-  const spawn = ((...args: any[]) => { seen = args; const e: any = new EventEmitter(); e.stdout = new EventEmitter(); e.stderr = new EventEmitter(); queueMicrotask(() => { e.stdout.emit('data', Buffer.from('HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n{"ok":true}')); e.emit('close', 0); }); return e; }) as any;
-  const result = await runGhApi('/repos/octo/hello', { spawn });
+type RunOptions = NonNullable<Parameters<typeof runGhApi>[1]>;
+type Spawn = NonNullable<RunOptions["spawn"]>;
+
+function mockSpawn(payload: string, seen?: unknown[]): Spawn {
+  return ((_file, args, options) => {
+    seen?.push(_file, args, options);
+    const child = Object.assign(new EventEmitter(), {
+      stdout: new EventEmitter(),
+      stderr: new EventEmitter(),
+    }) as unknown as ChildProcess;
+    queueMicrotask(() => {
+      child.stdout?.emit("data", Buffer.from(payload));
+      child.emit("close", 0);
+    });
+    return child;
+  }) as Spawn;
+}
+
+test("uses fixed safe gh command boundary", async () => {
+  const seen: unknown[] = [];
+  const result = await runGhApi("/repos/octo/hello", {
+    spawn: mockSpawn(
+      'HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n{"ok":true}',
+      seen,
+    ),
+  });
   assert.deepEqual(result.body, { ok: true });
-  assert.equal(seen[2].shell, false);
-  assert.deepEqual(seen[1], ['api','--hostname','github.com','--method','GET','--include','-H','Accept: application/vnd.github+json','-H','X-GitHub-Api-Version: 2026-03-10','/repos/octo/hello']);
+  const options = seen[2] as { shell: boolean };
+  assert.equal(options.shell, false);
+  assert.deepEqual(seen[1], [
+    "api",
+    "--hostname",
+    "github.com",
+    "--method",
+    "GET",
+    "--include",
+    "-H",
+    "Accept: application/vnd.github+json",
+    "-H",
+    "X-GitHub-Api-Version: 2026-03-10",
+    "/repos/octo/hello",
+  ]);
 });
 
-test('maps malformed response safely', async () => {
-  const spawn = ((...args: any[]) => { const e: any = new EventEmitter(); e.stdout = new EventEmitter(); e.stderr = new EventEmitter(); queueMicrotask(() => { e.stdout.emit('data', Buffer.from('not headers')); e.emit('close', 0); }); return e; }) as any;
-  await assert.rejects(runGhApi('/repos/octo/hello', { spawn }), (e: unknown) => e instanceof GhApiError && e.category === 'protocol');
+test("maps malformed response safely", async () => {
+  await assert.rejects(
+    runGhApi("/repos/octo/hello", { spawn: mockSpawn("not headers") }),
+    (error: unknown) =>
+      error instanceof GhApiError && error.category === "protocol",
+  );
 });
