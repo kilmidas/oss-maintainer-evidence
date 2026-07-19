@@ -115,3 +115,14 @@ test("ecosystem ledger validator requires relative real repository files", () =>
     assert.match(result.stderr, /implementation evidence/, evidence);
   }
 });
+
+test("committed ecosystem evidence ledger passes offline validation", () => {
+  const result = spawnSync(process.execPath, [validator], {
+    cwd: projectRoot,
+    encoding: "utf8",
+    env: {},
+  });
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /source.*claim.*capability mapping/);
+  assert.equal(result.stderr, "");
+});

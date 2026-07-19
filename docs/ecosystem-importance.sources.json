@@ -1,0 +1,316 @@
+{
+  "schemaVersion": "1.0",
+  "asOf": "2026-07-20",
+  "sources": [
+    {
+      "id": "lf-open-source-maintainers",
+      "title": "Open Source Maintainers",
+      "publisher": "Linux Foundation Research",
+      "url": "https://www.linuxfoundation.org/research/open-source-maintainers",
+      "accessedAt": "2026-07-20",
+      "sourceType": "official-research",
+      "reviewStatus": "unknown"
+    },
+    {
+      "id": "chaoss-starter-project-health",
+      "title": "Starter Project Health Metrics Model",
+      "publisher": "CHAOSS",
+      "url": "https://www.chaoss.community/starter-project-health-metrics-model/",
+      "publishedAt": "2023-04-13",
+      "accessedAt": "2026-07-20",
+      "sourceType": "official-documentation",
+      "reviewStatus": "not-applicable"
+    },
+    {
+      "id": "openssf-scorecard",
+      "title": "Scorecard",
+      "publisher": "Open Source Security Foundation",
+      "url": "https://openssf.org/scorecard/",
+      "accessedAt": "2026-07-20",
+      "sourceType": "official-documentation",
+      "reviewStatus": "not-applicable"
+    },
+    {
+      "id": "oss-funding-impact-toolkit",
+      "title": "A Toolkit for Measuring the Impacts of Public Funding on Open Source Software Development",
+      "publisher": "arXiv",
+      "url": "https://arxiv.org/abs/2411.06027",
+      "publishedAt": "2024-11-09",
+      "accessedAt": "2026-07-20",
+      "sourceType": "research-paper",
+      "reviewStatus": "unknown"
+    },
+    {
+      "id": "github-repository",
+      "title": "Get a repository",
+      "publisher": "GitHub Docs",
+      "url": "https://docs.github.com/en/rest/repos/repos#get-a-repository",
+      "accessedAt": "2026-07-20",
+      "sourceType": "official-documentation",
+      "reviewStatus": "not-applicable"
+    },
+    {
+      "id": "github-contributors",
+      "title": "List repository contributors",
+      "publisher": "GitHub Docs",
+      "url": "https://docs.github.com/en/rest/repos/repos#list-repository-contributors",
+      "accessedAt": "2026-07-20",
+      "sourceType": "official-documentation",
+      "reviewStatus": "not-applicable"
+    },
+    {
+      "id": "github-releases",
+      "title": "List releases",
+      "publisher": "GitHub Docs",
+      "url": "https://docs.github.com/en/rest/releases/releases#list-releases",
+      "accessedAt": "2026-07-20",
+      "sourceType": "official-documentation",
+      "reviewStatus": "not-applicable"
+    },
+    {
+      "id": "github-search-issues-pulls",
+      "title": "Search issues and pull requests",
+      "publisher": "GitHub Docs",
+      "url": "https://docs.github.com/en/rest/search/search#search-issues-and-pull-requests",
+      "accessedAt": "2026-07-20",
+      "sourceType": "official-documentation",
+      "reviewStatus": "not-applicable"
+    },
+    {
+      "id": "github-pull-detail",
+      "title": "Get a pull request",
+      "publisher": "GitHub Docs",
+      "url": "https://docs.github.com/en/rest/pulls/pulls#get-a-pull-request",
+      "accessedAt": "2026-07-20",
+      "sourceType": "official-documentation",
+      "reviewStatus": "not-applicable"
+    },
+    {
+      "id": "github-pull-reviews",
+      "title": "List reviews for a pull request",
+      "publisher": "GitHub Docs",
+      "url": "https://docs.github.com/en/rest/pulls/reviews#list-reviews-for-a-pull-request",
+      "accessedAt": "2026-07-20",
+      "sourceType": "official-documentation",
+      "reviewStatus": "not-applicable"
+    },
+    {
+      "id": "github-issue-detail",
+      "title": "Get an issue",
+      "publisher": "GitHub Docs",
+      "url": "https://docs.github.com/en/rest/issues/issues#get-an-issue",
+      "accessedAt": "2026-07-20",
+      "sourceType": "official-documentation",
+      "reviewStatus": "not-applicable"
+    },
+    {
+      "id": "github-issue-comments",
+      "title": "List issue comments for a repository",
+      "publisher": "GitHub Docs",
+      "url": "https://docs.github.com/en/rest/issues/comments#list-issue-comments-for-a-repository",
+      "accessedAt": "2026-07-20",
+      "sourceType": "official-documentation",
+      "reviewStatus": "not-applicable"
+    },
+    {
+      "id": "github-repository-content",
+      "title": "Get repository content",
+      "publisher": "GitHub Docs",
+      "url": "https://docs.github.com/en/rest/repos/contents#get-repository-content",
+      "accessedAt": "2026-07-20",
+      "sourceType": "official-documentation",
+      "reviewStatus": "not-applicable"
+    }
+  ],
+  "claims": [
+    {
+      "id": "maintainer-practices",
+      "statement": "A Linux Foundation qualitative study records transparency, formal documentation, and regular funding among practices shared by interviewed open-source maintainers.",
+      "sourceIds": ["lf-open-source-maintainers"],
+      "theme": "maintainer-role",
+      "projectRelevance": "A source-linked maintenance record can support transparent documentation of observable work without attempting to value all maintainer labor.",
+      "limitations": [
+        "The study is based on qualitative interviews and does not establish how common each practice is across all maintainers.",
+        "The study does not evaluate or endorse OSS Maintainer Evidence."
+      ]
+    },
+    {
+      "id": "project-health-measurement",
+      "statement": "The CHAOSS starter model presents time to first response, change-request closure ratio, contributor concentration, and release frequency as starting metrics for understanding project health.",
+      "sourceIds": ["chaoss-starter-project-health"],
+      "theme": "measurement",
+      "projectRelevance": "The current report exposes some underlying public events and release dates that a reviewer may inspect as inputs to a broader, context-aware assessment.",
+      "limitations": [
+        "OSS Maintainer Evidence does not calculate the CHAOSS starter metrics as defined.",
+        "Activity records and counts do not establish project health on their own."
+      ]
+    },
+    {
+      "id": "automated-inspectable-signals",
+      "statement": "OpenSSF Scorecard automates inspectable security-practice signals to help users evaluate an open-source project's risk and security posture.",
+      "sourceIds": ["openssf-scorecard"],
+      "theme": "automation",
+      "projectRelevance": "The Scorecard model provides context for why repeatable, inspectable evidence can reduce manual assessment work, while this tool applies that principle to source-linked maintenance activity.",
+      "limitations": [
+        "OpenSSF Scorecard evaluates security practices, while OSS Maintainer Evidence reports maintenance activity.",
+        "OSS Maintainer Evidence does not calculate a security score or claim OpenSSF compatibility."
+      ]
+    },
+    {
+      "id": "funding-impact-measurement-gap",
+      "statement": "A research paper on public funding for open-source development reports that meaningful impact measurement lacks consensus and recommends accounting for funding goals, project life stage, social structure, and other context.",
+      "sourceIds": ["oss-funding-impact-toolkit"],
+      "theme": "funding-impact",
+      "projectRelevance": "A source-linked activity record can provide a bounded factual input to a larger qualitative or mixed-method assessment without claiming to measure funding impact itself.",
+      "limitations": [
+        "The public source does not establish peer-review status, so the ledger records it as unknown.",
+        "OSS Maintainer Evidence does not measure funding outcomes, return on investment, or societal impact."
+      ]
+    },
+    {
+      "id": "public-github-provenance",
+      "statement": "GitHub documents public endpoints for repository facts, contributors, releases, issues, pull requests, reviews, comments, and repository content that correspond to the evidence families collected by the current tool.",
+      "sourceIds": [
+        "github-repository",
+        "github-contributors",
+        "github-releases",
+        "github-search-issues-pulls",
+        "github-pull-detail",
+        "github-pull-reviews",
+        "github-issue-detail",
+        "github-issue-comments",
+        "github-repository-content"
+      ],
+      "theme": "measurement",
+      "projectRelevance": "The tool turns selected documented public fields into records that retain canonical GitHub source URLs for human inspection.",
+      "limitations": [
+        "Endpoint availability does not establish that an activity is important, complete, or attributable without additional rules.",
+        "GitHub documentation does not endorse this tool or establish ecosystem impact."
+      ]
+    }
+  ],
+  "capabilityMappings": [
+    {
+      "evidenceType": "release",
+      "claimIds": ["project-health-measurement", "public-github-provenance"],
+      "coverage": "partial",
+      "implementationEvidence": [
+        "src/github/collect-repository.ts",
+        "src/domain/report.ts",
+        "docs/attribution.md"
+      ],
+      "notes": "The report lists attributable releases and dates but does not calculate or interpret release frequency."
+    },
+    {
+      "evidenceType": "authored_pull_request",
+      "claimIds": ["project-health-measurement", "public-github-provenance"],
+      "coverage": "partial",
+      "implementationEvidence": [
+        "src/github/collect-pulls.ts",
+        "src/domain/report.ts",
+        "docs/attribution.md"
+      ],
+      "notes": "Authored pull requests are observable activity, not a change-request health assessment."
+    },
+    {
+      "evidenceType": "merged_pull_request",
+      "claimIds": ["project-health-measurement", "public-github-provenance"],
+      "coverage": "partial",
+      "implementationEvidence": [
+        "src/github/collect-pulls.ts",
+        "src/domain/report.ts",
+        "docs/attribution.md"
+      ],
+      "notes": "Merged pull requests do not supply the denominator or context required for a closure ratio."
+    },
+    {
+      "evidenceType": "review",
+      "claimIds": ["public-github-provenance"],
+      "coverage": "partial",
+      "implementationEvidence": [
+        "src/github/collect-pulls.ts",
+        "src/domain/report.ts",
+        "docs/attribution.md"
+      ],
+      "notes": "Submitted review records do not establish review quality or contributor experience."
+    },
+    {
+      "evidenceType": "opened_issue",
+      "claimIds": ["project-health-measurement", "public-github-provenance"],
+      "coverage": "partial",
+      "implementationEvidence": [
+        "src/github/collect-issues.ts",
+        "src/domain/report.ts",
+        "docs/attribution.md"
+      ],
+      "notes": "Opened issues are source-linked activity but do not establish responsiveness or triage quality."
+    },
+    {
+      "evidenceType": "closed_issue",
+      "claimIds": ["project-health-measurement", "public-github-provenance"],
+      "coverage": "partial",
+      "implementationEvidence": [
+        "src/github/collect-issues.ts",
+        "src/domain/report.ts",
+        "docs/attribution.md"
+      ],
+      "notes": "Closed issues do not establish resolution quality or provide a complete closure ratio."
+    },
+    {
+      "evidenceType": "issue_comment",
+      "claimIds": ["project-health-measurement", "public-github-provenance"],
+      "coverage": "partial",
+      "implementationEvidence": [
+        "src/github/collect-issues.ts",
+        "src/domain/report.ts",
+        "docs/attribution.md"
+      ],
+      "notes": "Comments are not classified as first human responses and do not establish response quality."
+    },
+    {
+      "evidenceType": "repository",
+      "claimIds": ["public-github-provenance"],
+      "coverage": "direct",
+      "implementationEvidence": [
+        "src/github/collect-repository.ts",
+        "src/domain/report.ts"
+      ],
+      "notes": "The report preserves selected observed repository facts and their canonical repository source URL."
+    },
+    {
+      "evidenceType": "community",
+      "claimIds": ["maintainer-practices", "public-github-provenance"],
+      "coverage": "context-only",
+      "implementationEvidence": [
+        "src/github/collect-repository.ts",
+        "src/domain/report.ts",
+        "docs/limitations.md"
+      ],
+      "notes": "Community-file presence does not establish documentation quality, governance maturity, or policy compliance."
+    },
+    {
+      "evidenceType": "adoption",
+      "claimIds": [
+        "funding-impact-measurement-gap",
+        "public-github-provenance"
+      ],
+      "coverage": "context-only",
+      "implementationEvidence": [
+        "src/github/collect-repository.ts",
+        "src/domain/report.ts",
+        "docs/limitations.md"
+      ],
+      "notes": "Stars, forks, subscribers, and visible contributors are disclosed proxies, not proof of adoption, funding impact, or ecosystem importance."
+    },
+    {
+      "evidenceType": "evidence_urls",
+      "claimIds": ["public-github-provenance"],
+      "coverage": "direct",
+      "implementationEvidence": [
+        "src/render/markdown.ts",
+        "examples/oss-maintainer-evidence.md"
+      ],
+      "notes": "Canonical links support human inspection of listed facts; they do not validate the importance of an activity."
+    }
+  ]
+}
