@@ -53,13 +53,13 @@ test("documentation README contains the exact current command help", () => {
   );
 });
 
-test("documentation describes the 0.2.0 signed-out verifier boundary", () => {
+test("documentation describes the signed-out verifier boundary", () => {
   const packageMetadata = JSON.parse(read("package.json")) as {
     version: string;
     private: boolean;
   };
   const readme = read("README.md");
-  assert.equal(packageMetadata.version, "0.2.0");
+  assert.equal(packageMetadata.version, "0.3.0");
   assert.equal(packageMetadata.private, true);
   assert.match(readme, /oss-evidence verify <report\.json>/);
   assert.match(readme, /without (?:GitHub )?credentials/i);

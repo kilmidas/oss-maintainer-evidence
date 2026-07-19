@@ -162,7 +162,7 @@ test("derives the archive filename from package metadata", () => {
     packResults[0]?.filename,
     `${packageMetadata.name}-${packageMetadata.version}.tgz`,
   );
-  assert.equal(packResults[0]?.filename, "oss-evidence-0.2.0.tgz");
+  assert.equal(packResults[0]?.filename, "oss-evidence-0.3.0.tgz");
   assert.ok(
     packResults[0]?.files?.some(({ path }) => path === "dist/package.json"),
   );

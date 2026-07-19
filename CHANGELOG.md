@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented in this file. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2026-07-20
+
+### Added
+
+- A reusable read-only GitHub workflow collects and verifies public maintainer evidence without checking out caller code.
+
 ## [0.2.0] - 2026-07-20
 
 ### Added
