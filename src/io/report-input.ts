@@ -1,4 +1,4 @@
-import { open } from "node:fs/promises";
+import { type FileHandle, open } from "node:fs/promises";
 import { TextDecoder } from "node:util";
 
 import { InputError } from "../errors.js";
@@ -7,7 +7,7 @@ const MAX_REPORT_BYTES = 5 * 1024 * 1024;
 const READ_CHUNK_BYTES = 64 * 1024;
 
 export async function readReportJson(path: string): Promise<unknown> {
-  let handle;
+  let handle: FileHandle | undefined;
   try {
     handle = await open(path, "r");
     const chunks: Buffer[] = [];

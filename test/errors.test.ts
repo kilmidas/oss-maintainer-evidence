@@ -8,8 +8,8 @@ import {
   OutputWriteError,
   PartialCollectionError,
   RequiredCollectionError,
-  VerificationFailedError,
   sanitizeErrorMessage,
+  VerificationFailedError,
 } from "../src/errors.js";
 
 test("error categories expose stable exit codes", () => {

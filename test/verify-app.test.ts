@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
-import { setTimeout as delay } from "node:timers/promises";
 import test from "node:test";
+import { setTimeout as delay } from "node:timers/promises";
 
 import { runVerification } from "../src/app/verify.js";
 import type { VerificationPlan } from "../src/domain/verification.js";

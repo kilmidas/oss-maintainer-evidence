@@ -55,9 +55,7 @@ test("signed-out request follows bounded same-host relative redirects", async ()
   const fetcher: FetchLike = async (input) => {
     const url = String(input);
     calls.push(url);
-    return calls.length === 1
-      ? response(301, "/acme/renamed")
-      : response(204);
+    return calls.length === 1 ? response(301, "/acme/renamed") : response(204);
   };
 
   const result = await verifySignedOutGithubTarget(
@@ -105,8 +103,7 @@ test("signed-out request rejects unsafe redirect behavior", async () => {
     },
     {
       label: "limit",
-      fetcher: async (input) =>
-        response(302, `${String(input)}/next`),
+      fetcher: async (input) => response(302, `${String(input)}/next`),
       reason: "redirect_limit",
       maxRedirects: 1,
     },

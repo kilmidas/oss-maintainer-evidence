@@ -27,7 +27,9 @@ function reportCollectionStartupFailure(): void {
 }
 
 function reportVerificationStartupFailure(): void {
-  process.stderr.write("Unable to start verification. Reinstall oss-evidence.\n");
+  process.stderr.write(
+    "Unable to start verification. Reinstall oss-evidence.\n",
+  );
   process.exitCode = 1;
 }
 

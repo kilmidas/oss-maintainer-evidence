@@ -12,7 +12,9 @@ globalThis.fetch = async (_input, init) => {
     case "not-found":
       return new Response(null, { status: 404 });
     case "network-error":
-      throw new Error(process.env.SYNTHETIC_TOKEN ?? "synthetic transport error");
+      throw new Error(
+        process.env.SYNTHETIC_TOKEN ?? "synthetic transport error",
+      );
     default:
       throw new Error("unknown fake fetch mode");
   }

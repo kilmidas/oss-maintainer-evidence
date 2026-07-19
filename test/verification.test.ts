@@ -60,9 +60,7 @@ test("verification plan validates, sorts, deduplicates, and groups fragments", (
     },
     {
       targetUrl: "https://github.com/acme/demo/blob/main/SUPPORT.md",
-      evidenceUrls: [
-        "https://github.com/acme/demo/blob/main/SUPPORT.md",
-      ],
+      evidenceUrls: ["https://github.com/acme/demo/blob/main/SUPPORT.md"],
     },
     {
       targetUrl: "https://github.com/acme/demo/pull/7",

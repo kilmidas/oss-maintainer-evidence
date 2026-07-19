@@ -3,9 +3,8 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
-
-import { readReportJson } from "../src/io/report-input.js";
 import { InputError } from "../src/errors.js";
+import { readReportJson } from "../src/io/report-input.js";
 
 const withTempDirectory = async (
   run: (directory: string) => Promise<void>,

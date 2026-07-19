@@ -1,12 +1,13 @@
-import type { VerificationPlan } from "../domain/verification.js";
 import { publicGithubUrlSchema } from "../domain/report.js";
+import type { VerificationPlan } from "../domain/verification.js";
 import {
   type TargetVerificationResult,
   verifySignedOutGithubTarget,
 } from "../http/signed-out-github.js";
 
 const CONCURRENCY = 8;
-const SAFE_FAILURE = /^(?:http_[1-5]\d{2}|redirect_(?:missing|invalid|loop|limit)|timeout|network|invalid_target|protocol)$/;
+const SAFE_FAILURE =
+  /^(?:http_[1-5]\d{2}|redirect_(?:missing|invalid|loop|limit)|timeout|network|invalid_target|protocol)$/;
 
 export type VerifyTarget = (
   targetUrl: string,
@@ -88,10 +89,7 @@ export async function runVerification(
   };
 
   await Promise.all(
-    Array.from(
-      { length: Math.min(CONCURRENCY, plan.targets.length) },
-      worker,
-    ),
+    Array.from({ length: Math.min(CONCURRENCY, plan.targets.length) }, worker),
   );
 
   const results: EvidenceVerificationResult[] = [];
