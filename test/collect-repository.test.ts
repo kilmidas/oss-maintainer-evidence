@@ -205,8 +205,8 @@ test("surfaces release and contributor truncation without hidden over-count", as
     }),
   );
   assert.equal(result.partial, true);
-  assert.equal(result.releasePagination.truncated, true);
-  assert.equal(result.contributorPagination.truncated, true);
+  assert.equal(result.pagination.releases.truncated, true);
+  assert.equal(result.pagination.contributors.truncated, true);
   assert.equal(result.visibleContributors, 2);
   assert.deepEqual(
     result.limitations.map(({ code }) => code),

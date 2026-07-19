@@ -717,6 +717,21 @@
           },
           "required": ["fetched", "truncated"],
           "additionalProperties": false
+        },
+        "contributors": {
+          "type": "object",
+          "properties": {
+            "fetched": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "truncated": {
+              "type": "boolean"
+            }
+          },
+          "required": ["fetched", "truncated"],
+          "additionalProperties": false
         }
       },
       "required": [
@@ -726,7 +741,8 @@
         "reviews",
         "openedIssues",
         "closedIssues",
-        "issueComments"
+        "issueComments",
+        "contributors"
       ],
       "additionalProperties": false
     },

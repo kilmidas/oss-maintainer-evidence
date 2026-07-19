@@ -72,6 +72,7 @@ const literals = [
   "closed_issue",
   "issue_comment",
 ] as const;
+const paginationKeys = [...keys, "contributors"] as const;
 const base = {
   id: z.string().min(1),
   actor: z.string().min(1),
@@ -158,7 +159,7 @@ export const reportSchema = z
     pagination: z
       .object(
         Object.fromEntries(
-          keys.map((k) => [
+          paginationKeys.map((k) => [
             k,
             z
               .object({

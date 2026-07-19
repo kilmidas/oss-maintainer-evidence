@@ -9,6 +9,7 @@ const repositoryResponseSchema = z
     stargazers_count: z.number().int().nonnegative().optional(),
     forks_count: z.number().int().nonnegative().optional(),
     subscribers_count: z.number().int().nonnegative().optional(),
+    watchers_count: z.number().int().nonnegative().optional(),
   })
   .strip();
 
@@ -320,19 +321,22 @@ export async function collectRepository(
     adoption: {
       stars: rawRepository.stargazers_count ?? null,
       forks: rawRepository.forks_count ?? null,
-      watchers: rawRepository.subscribers_count ?? null,
+      watchers:
+        rawRepository.subscribers_count ?? rawRepository.watchers_count ?? null,
       observedAt: input.observedAt,
     } satisfies Report["adoption"],
-    releasePagination: {
-      fetched: releasePage.fetched,
-      truncated: releasePage.truncated,
+    pagination: {
+      releases: {
+        fetched: releasePage.fetched,
+        truncated: releasePage.truncated,
+      },
+      contributors: contributorPagination
+        ? {
+            fetched: contributorPagination.fetched,
+            truncated: contributorPagination.truncated,
+          }
+        : { fetched: 0, truncated: false },
     },
-    contributorPagination: contributorPagination
-      ? {
-          fetched: contributorPagination.fetched,
-          truncated: contributorPagination.truncated,
-        }
-      : { fetched: 0, truncated: false },
     visibleContributors: contributorPagination?.items.length ?? null,
     limitations,
     partial,

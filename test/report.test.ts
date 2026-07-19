@@ -33,6 +33,7 @@ const base = {
     observedAt: "2026-01-31T00:00:00.000Z",
   },
   pagination: {
+    contributors: { fetched: 1, truncated: false },
     releases: { fetched: 2, truncated: false },
     authoredPullRequests: { fetched: 2, truncated: false },
     mergedPullRequests: { fetched: 0, truncated: false },
