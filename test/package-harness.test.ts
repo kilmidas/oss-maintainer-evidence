@@ -18,6 +18,46 @@ import { resolveNpmExecPath } from "./helpers/npm.js";
 
 const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 
+test("package metadata supports discovery without enabling publication", () => {
+  const metadata = JSON.parse(
+    readFileSync(resolve(projectRoot, "package.json"), "utf8"),
+  ) as {
+    private: boolean;
+    description?: string;
+    homepage?: string;
+    keywords?: string[];
+    files?: string[];
+  };
+
+  assert.equal(metadata.private, true);
+  assert.equal(
+    metadata.description,
+    "Generate source-linked, read-only evidence reports from public GitHub maintainer activity.",
+  );
+  assert.equal(
+    metadata.homepage,
+    "https://github.com/kilmidas/oss-maintainer-evidence#readme",
+  );
+  assert.deepEqual(metadata.keywords, [
+    "cli",
+    "evidence",
+    "github",
+    "maintainer",
+    "open-source",
+  ]);
+  assert.deepEqual(metadata.files, [
+    "dist",
+    "schema",
+    "docs/architecture.md",
+    "docs/attribution.md",
+    "docs/ecosystem-importance.md",
+    "docs/independent-validation.md",
+    "docs/limitations.md",
+    "README.md",
+    "LICENSE",
+  ]);
+});
+
 test("requires an existing npm CLI entry point", () => {
   assert.throws(() => resolveNpmExecPath(undefined), /npm_execpath is missing/);
   assert.throws(

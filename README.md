@@ -112,6 +112,12 @@ The v0.2.0 verifier reached all 20 unique evidence targets in the JSON example w
 
 The original [Markdown](examples/oss-maintainer-evidence.md) and [JSON](examples/oss-maintainer-evidence.json) examples remain available as the pre-v0.2.0 baseline.
 
+## Independent validation
+
+Independent maintainers can follow the [Independent validation](docs/independent-validation.md) workflow to install a released archive, collect a report for one public repository, verify its evidence links, and submit structured feedback. Sharing a generated report is optional.
+
+Validation feedback helps find attribution gaps and workflow friction. It does not imply adoption, endorsement, certification, or affiliation, and the project does not count maintainer self-tests or release-verification downloads as external adoption.
+
 ## Exit codes
 
 | Code | Meaning | Report emitted |
@@ -145,7 +151,8 @@ The first release intentionally covers one public GitHub.com repository at a tim
 
 ## Roadmap
 
-- Publish a follow-up report after a justified maintenance release.
+- Collect independent maintainer validation before broadening the data-provider scope.
+- Turn reproducible validation feedback into focused fixes and maintenance releases.
 - Add a machine-readable verification-result format after the text contract is stable.
 - Evaluate additional public providers only after the GitHub contract is stable.
 - Consider npm registry publication only after demand and publisher identity are established.

@@ -1,0 +1,64 @@
+name: Independent validation
+description: Share safe feedback from testing a released archive on public data
+title: "[Validation]: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for testing a released archive. Share only information you have reviewed for public disclosure. This form records feedback, not an endorsement or adoption claim.
+  - type: input
+    id: version
+    attributes:
+      label: Released version
+      description: Output of `oss-evidence --version`.
+      placeholder: 0.2.0
+    validations:
+      required: true
+  - type: dropdown
+    id: outcome
+    attributes:
+      label: Validation outcome
+      options:
+        - Complete report and all links verified
+        - Partial report with expected limitations
+        - Report generated but verification failed
+        - Collection failed before a report was generated
+        - Not sure
+    validations:
+      required: true
+  - type: input
+    id: repository
+    attributes:
+      label: Public repository or placeholder
+      description: Optional. Link only a public GitHub.com repository, or use owner/repository.
+  - type: textarea
+    id: accuracy
+    attributes:
+      label: Evidence accuracy
+      description: Which activities, counts, source links, or limitations matched or differed from the public repository?
+    validations:
+      required: true
+  - type: textarea
+    id: workflow
+    attributes:
+      label: Workflow fit and friction
+      description: What made install, collection, review, or verification easier or harder?
+    validations:
+      required: true
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Safe diagnostics
+      description: Optional. Include exit codes and sanitized messages, but no credentials or non-public material.
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Data and interpretation safety
+      options:
+        - label: I used only public GitHub.com data or synthetic placeholders.
+          required: true
+        - label: I reviewed everything in this issue for public disclosure.
+          required: true
+        - label: I understand that this validation does not imply endorsement, certification, or affiliation.
+          required: true
+
