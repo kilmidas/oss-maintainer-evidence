@@ -172,6 +172,45 @@ test("rejects github URL traversal and authority variants", () => {
     );
 });
 
+test("allows only canonical pull review fragments on activity URLs", () => {
+  const report = aggregateEvidence({
+    ...base,
+    status: "complete",
+    activities: {
+      releases: [],
+      authoredPullRequests: [],
+      mergedPullRequests: [],
+      reviews: [
+        {
+          ...activity("99", "authored_pull_request"),
+          type: "review",
+          url: "https://github.com/acme/repo/pull/7#pullrequestreview-99",
+        },
+      ],
+      openedIssues: [],
+      closedIssues: [],
+      issueComments: [],
+    },
+  } as never);
+  assert.equal(report.summary.reviews, 1);
+  assert.throws(() =>
+    reportSchema.parse({
+      ...report,
+      activities: {
+        ...report.activities,
+        reviews: [
+          {
+            ...(
+              report.activities.reviews as unknown as Record<string, unknown>[]
+            )[0],
+            url: "https://github.com/acme/repo/pull/7#unsafe",
+          },
+        ],
+      },
+    }),
+  );
+});
+
 test("rejects impossible UTC calendar dates", () => {
   assert.throws(() =>
     reportSchema.parse({

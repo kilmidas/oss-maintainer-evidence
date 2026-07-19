@@ -249,7 +249,7 @@ export async function collectPulls(
         type: "review",
         actor: review.user.login,
         occurredAt: new Date(occurred).toISOString(),
-        url: candidate.html_url,
+        url: review.html_url,
         title: `Review on ${candidate.title}`,
         attributionRule: "review.user.login and review.submitted_at",
       });

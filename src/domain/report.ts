@@ -54,6 +54,20 @@ const utc = z
       d.getUTCSeconds() === +m[6]
     );
   });
+const activityGithubUrl = z.string().refine((value) => {
+  let url: URL;
+  try {
+    url = new URL(value);
+  } catch {
+    return false;
+  }
+  const fragment = url.hash;
+  url.hash = "";
+  return (
+    (!fragment || /^#pullrequestreview-\d+$/.test(fragment)) &&
+    githubUrl.safeParse(url.toString()).success
+  );
+});
 const keys = [
   "releases",
   "authoredPullRequests",
@@ -77,7 +91,7 @@ const base = {
   id: z.string().min(1),
   actor: z.string().min(1),
   occurredAt: utc,
-  url: githubUrl,
+  url: activityGithubUrl,
   title: z.string(),
   attributionRule: z.string().min(1),
 };
