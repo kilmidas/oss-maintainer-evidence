@@ -1,7 +1,5 @@
 #!/usr/bin/env node
 
-import { parseArgs } from "node:util";
-
 import { getVersion } from "./version.js";
 
 const HELP_TEXT =
@@ -10,13 +8,6 @@ const HELP_TEXT =
   "  --help     Show command help\n" +
   "  --version  Show the package version\n";
 
-function reportUnsupportedInvocation(): void {
-  process.stderr.write(
-    "Unsupported invocation. Run oss-evidence --help for usage.\n",
-  );
-  process.exitCode = 2;
-}
-
 function reportPackageMetadataFailure(): void {
   process.stderr.write(
     "Unable to read package metadata. Reinstall oss-evidence.\n",
@@ -24,43 +15,35 @@ function reportPackageMetadataFailure(): void {
   process.exitCode = 1;
 }
 
-function main(): void {
-  const args = process.argv.slice(2);
-  let parsedArguments: ReturnType<typeof parseArgs>;
+async function runCollect(args: readonly string[]): Promise<void> {
+  const { parseCollectInput } = await import("./domain/input.js");
+  const {
+    InputError,
+    OperationalError,
+    RequiredCollectionError,
+    sanitizeErrorMessage,
+  } = await import("./errors.js");
 
   try {
-    parsedArguments = parseArgs({
-      args,
-      options: {
-        help: { type: "boolean" },
-        version: { type: "boolean" },
-      },
-      allowPositionals: true,
-      strict: true,
-    });
-  } catch {
-    reportUnsupportedInvocation();
-    return;
+    parseCollectInput(args, new Date());
+    throw new RequiredCollectionError(
+      "Collection is not available in this build.",
+    );
+  } catch (error) {
+    const operationalError =
+      error instanceof OperationalError
+        ? error
+        : new InputError("Invalid command input.");
+    process.stderr.write(`${sanitizeErrorMessage(operationalError.message)}\n`);
+    process.exitCode = operationalError.exitCode;
   }
+}
 
-  const { values, positionals } = parsedArguments;
-
-  const hasNoPositionals = positionals.length === 0;
-  const hasOneArgument = args.length === 1;
-
-  if (
-    values.help === true &&
-    values.version === undefined &&
-    hasNoPositionals &&
-    hasOneArgument
-  ) {
+async function main(): Promise<void> {
+  const args = process.argv.slice(2);
+  if (args.length === 1 && args[0] === "--help") {
     process.stdout.write(HELP_TEXT);
-  } else if (
-    values.version === true &&
-    values.help === undefined &&
-    hasNoPositionals &&
-    hasOneArgument
-  ) {
+  } else if (args.length === 1 && args[0] === "--version") {
     let version: string;
     try {
       version = getVersion();
@@ -70,8 +53,8 @@ function main(): void {
     }
     process.stdout.write(`${version}\n`);
   } else {
-    reportUnsupportedInvocation();
+    await runCollect(args);
   }
 }
 
-main();
+await main();
