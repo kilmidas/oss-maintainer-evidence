@@ -64,7 +64,7 @@ const activityGithubUrl = z.string().refine((value) => {
   const fragment = url.hash;
   url.hash = "";
   return (
-    (!fragment || /^#pullrequestreview-\d+$/.test(fragment)) &&
+    (!fragment || /^#(?:pullrequestreview|issuecomment)-\d+$/.test(fragment)) &&
     githubUrl.safeParse(url.toString()).success
   );
 });

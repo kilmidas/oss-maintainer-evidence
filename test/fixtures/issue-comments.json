@@ -1,0 +1,9 @@
+[
+  {
+    "id": 88,
+    "html_url": "https://github.com/acme/demo/issues/7#issuecomment-88",
+    "issue_url": "https://api.github.com/repos/acme/demo/issues/7",
+    "user": { "login": "Alice" },
+    "created_at": "2024-06-02T00:00:00Z"
+  }
+]

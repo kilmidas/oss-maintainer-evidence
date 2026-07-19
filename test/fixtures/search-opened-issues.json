@@ -1,0 +1,10 @@
+[
+  {
+    "id": 10,
+    "number": 7,
+    "title": "Document behavior",
+    "html_url": "https://github.com/acme/demo/issues/7",
+    "user": { "login": "Alice" },
+    "created_at": "2024-01-01T00:00:00Z"
+  }
+]
