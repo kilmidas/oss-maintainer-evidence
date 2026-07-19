@@ -17,17 +17,33 @@ function reportUnsupportedInvocation(): void {
   process.exitCode = 2;
 }
 
-try {
+function reportPackageMetadataFailure(): void {
+  process.stderr.write(
+    "Unable to read package metadata. Reinstall oss-evidence.\n",
+  );
+  process.exitCode = 1;
+}
+
+function main(): void {
   const args = process.argv.slice(2);
-  const { values, positionals } = parseArgs({
-    args,
-    options: {
-      help: { type: "boolean" },
-      version: { type: "boolean" },
-    },
-    allowPositionals: true,
-    strict: true,
-  });
+  let parsedArguments: ReturnType<typeof parseArgs>;
+
+  try {
+    parsedArguments = parseArgs({
+      args,
+      options: {
+        help: { type: "boolean" },
+        version: { type: "boolean" },
+      },
+      allowPositionals: true,
+      strict: true,
+    });
+  } catch {
+    reportUnsupportedInvocation();
+    return;
+  }
+
+  const { values, positionals } = parsedArguments;
 
   const hasNoPositionals = positionals.length === 0;
   const hasOneArgument = args.length === 1;
@@ -45,10 +61,17 @@ try {
     hasNoPositionals &&
     hasOneArgument
   ) {
-    process.stdout.write(`${getVersion()}\n`);
+    let version: string;
+    try {
+      version = getVersion();
+    } catch {
+      reportPackageMetadataFailure();
+      return;
+    }
+    process.stdout.write(`${version}\n`);
   } else {
     reportUnsupportedInvocation();
   }
-} catch {
-  reportUnsupportedInvocation();
 }
+
+main();

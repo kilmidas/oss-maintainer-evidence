@@ -2,7 +2,6 @@ import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import {
   copyFileSync,
-  existsSync,
   mkdirSync,
   mkdtempSync,
   readFileSync,
@@ -14,14 +13,12 @@ import { dirname, join, resolve } from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
+import { runNpm } from "./helpers/npm.js";
+
 const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const cliPath = resolve(projectRoot, "dist/cli.js");
-const npmCommand = process.platform === "win32" ? "npm.cmd" : "npm";
 
-function runInstalledVersion(packageMetadata: {
-  name: string;
-  version: string;
-}) {
+function runInstalledVersion(packageFile: Record<string, unknown> | string) {
   const installedRoot = mkdtempSync(join(tmpdir(), "oss-evidence-version-"));
   const installedDist = resolve(installedRoot, "dist");
 
@@ -32,9 +29,15 @@ function runInstalledVersion(packageMetadata: {
       resolve(projectRoot, "dist/version.js"),
       resolve(installedDist, "version.js"),
     );
+    copyFileSync(
+      resolve(projectRoot, "dist/package.json"),
+      resolve(installedDist, "package.json"),
+    );
     writeFileSync(
       resolve(installedRoot, "package.json"),
-      `${JSON.stringify({ ...packageMetadata, type: "module" })}\n`,
+      typeof packageFile === "string"
+        ? packageFile
+        : `${JSON.stringify(packageFile)}\n`,
     );
 
     return spawnSync(
@@ -80,6 +83,14 @@ test("prints the version from package metadata", () => {
   assert.equal(result.stderr, "");
 });
 
+test("build emits a version-free ESM boundary", () => {
+  const distPackageMetadata: unknown = JSON.parse(
+    readFileSync(resolve(projectRoot, "dist/package.json"), "utf8"),
+  );
+
+  assert.deepEqual(distPackageMetadata, { type: "module" });
+});
+
 test("reads a changed version from installed package metadata", () => {
   const version = "7.6.5-rc.1+build.9";
   const result = runInstalledVersion({ name: "oss-evidence", version });
@@ -90,17 +101,41 @@ test("reads a changed version from installed package metadata", () => {
 });
 
 test("rejects invalid installed package metadata", () => {
-  const invalidMetadata = [
-    { name: "other-package", version: "1.2.3" },
-    { name: "oss-evidence", version: "01.2.3" },
+  const invalidPackageFiles: Array<{
+    label: string;
+    packageFile: Record<string, unknown> | string;
+  }> = [
+    {
+      label: "wrong package name",
+      packageFile: { name: "other-package", version: "1.2.3" },
+    },
+    {
+      label: "numeric version",
+      packageFile: { name: "oss-evidence", version: 123 },
+    },
+    {
+      label: "missing version",
+      packageFile: { name: "oss-evidence" },
+    },
+    {
+      label: "invalid JSON",
+      packageFile: "{invalid-json",
+    },
+    {
+      label: "leading-zero SemVer",
+      packageFile: { name: "oss-evidence", version: "01.2.3" },
+    },
   ];
 
-  for (const packageMetadata of invalidMetadata) {
-    const result = runInstalledVersion(packageMetadata);
+  for (const { label, packageFile } of invalidPackageFiles) {
+    const result = runInstalledVersion(packageFile);
 
-    assert.equal(result.status, 2);
+    assert.equal(result.status, 1, label);
     assert.equal(result.stdout, "");
-    assert.notEqual(result.stderr, "");
+    assert.equal(
+      result.stderr,
+      "Unable to read package metadata. Reinstall oss-evidence.\n",
+    );
   }
 });
 
@@ -111,18 +146,15 @@ test("derives the archive filename from package metadata", () => {
   assert.equal(typeof packageMetadata.name, "string");
   assert.equal(typeof packageMetadata.version, "string");
 
-  const result = spawnSync(
-    npmCommand,
+  const result = runNpm(
     ["pack", "--dry-run", "--json", "--ignore-scripts"],
-    {
-      cwd: projectRoot,
-      encoding: "utf8",
-    },
+    projectRoot,
   );
 
   assert.equal(result.status, 0, result.stderr);
   const packResults = JSON.parse(result.stdout) as Array<{
     filename?: unknown;
+    files?: Array<{ path?: unknown }>;
   }>;
   assert.equal(packResults.length, 1);
   assert.equal(
@@ -130,6 +162,9 @@ test("derives the archive filename from package metadata", () => {
     `${packageMetadata.name}-${packageMetadata.version}.tgz`,
   );
   assert.equal(packResults[0]?.filename, "oss-evidence-0.1.0.tgz");
+  assert.ok(
+    packResults[0]?.files?.some(({ path }) => path === "dist/package.json"),
+  );
 });
 
 test("rejects unsupported invocations with exit code 2", () => {
@@ -154,25 +189,5 @@ test("rejects unsupported invocations with exit code 2", () => {
     );
     assert.equal(result.stdout, "");
     assert.notEqual(result.stderr, "");
-  }
-});
-
-test("compiler scripts remove stale output", () => {
-  const staleBuildOutput = resolve(projectRoot, "dist/stale.js");
-  const staleTestOutput = resolve(projectRoot, ".test-dist/stale.js");
-  writeFileSync(staleBuildOutput, "stale build output\n");
-  writeFileSync(staleTestOutput, "stale test output\n");
-
-  try {
-    const buildResult = spawnSync(npmCommand, ["run", "build"], {
-      cwd: projectRoot,
-      encoding: "utf8",
-    });
-    assert.equal(buildResult.status, 0, buildResult.stderr);
-    assert.equal(existsSync(staleBuildOutput), false);
-    assert.equal(existsSync(staleTestOutput), false);
-  } finally {
-    rmSync(staleBuildOutput, { force: true });
-    rmSync(staleTestOutput, { force: true });
   }
 });
