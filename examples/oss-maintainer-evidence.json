@@ -1,0 +1,190 @@
+{
+  "schemaVersion": "1.0",
+  "generatedAt": "2026-07-19T14:17:34.306Z",
+  "status": "complete",
+  "query": {
+    "repository": {
+      "owner": "kilmidas",
+      "name": "oss-maintainer-evidence",
+      "fullName": "kilmidas/oss-maintainer-evidence"
+    },
+    "maintainer": "kilmidas",
+    "since": "2026-04-20T14:17:34.306Z",
+    "until": "2026-07-19T14:17:34.306Z",
+    "maxItems": 200
+  },
+  "repository": {
+    "owner": "kilmidas",
+    "name": "oss-maintainer-evidence",
+    "fullName": "kilmidas/oss-maintainer-evidence",
+    "description": "Generate source-linked, read-only evidence reports from public GitHub maintainer activity.",
+    "sourceUrl": "https://github.com/kilmidas/oss-maintainer-evidence",
+    "observedAt": "2026-07-19T14:17:34.306Z"
+  },
+  "activities": {
+    "releases": [],
+    "authoredPullRequests": [
+      {
+        "id": "4922998370",
+        "actor": "kilmidas",
+        "occurredAt": "2026-07-19T14:12:11.000Z",
+        "url": "https://github.com/kilmidas/oss-maintainer-evidence/pull/8",
+        "title": "Allow numeric GitHub detail routes",
+        "attributionRule": "pull.user.login and pull.created_at",
+        "type": "authored_pull_request"
+      },
+      {
+        "id": "4922956542",
+        "actor": "kilmidas",
+        "occurredAt": "2026-07-19T14:00:11.000Z",
+        "url": "https://github.com/kilmidas/oss-maintainer-evidence/pull/6",
+        "title": "Fix package verification with a cold npm cache",
+        "attributionRule": "pull.user.login and pull.created_at",
+        "type": "authored_pull_request"
+      }
+    ],
+    "mergedPullRequests": [
+      {
+        "id": "4086072140",
+        "actor": "kilmidas",
+        "occurredAt": "2026-07-19T14:14:07.000Z",
+        "url": "https://github.com/kilmidas/oss-maintainer-evidence/pull/8",
+        "title": "Allow numeric GitHub detail routes",
+        "attributionRule": "pull.merged_by.login and pull.merged_at",
+        "type": "merged_pull_request"
+      },
+      {
+        "id": "4086040055",
+        "actor": "kilmidas",
+        "occurredAt": "2026-07-19T14:02:20.000Z",
+        "url": "https://github.com/kilmidas/oss-maintainer-evidence/pull/6",
+        "title": "Fix package verification with a cold npm cache",
+        "attributionRule": "pull.merged_by.login and pull.merged_at",
+        "type": "merged_pull_request"
+      }
+    ],
+    "reviews": [],
+    "openedIssues": [
+      {
+        "id": "4922996334",
+        "actor": "kilmidas",
+        "occurredAt": "2026-07-19T14:11:36.000Z",
+        "url": "https://github.com/kilmidas/oss-maintainer-evidence/issues/7",
+        "title": "Collection rejects numeric pull request and issue routes",
+        "attributionRule": "issue.user.login and issue.created_at",
+        "type": "opened_issue"
+      },
+      {
+        "id": "4922955170",
+        "actor": "kilmidas",
+        "occurredAt": "2026-07-19T13:59:46.000Z",
+        "url": "https://github.com/kilmidas/oss-maintainer-evidence/issues/5",
+        "title": "Package verification fails with a cold npm cache",
+        "attributionRule": "issue.user.login and issue.created_at",
+        "type": "opened_issue"
+      }
+    ],
+    "closedIssues": [
+      {
+        "id": "4922996334",
+        "actor": "kilmidas",
+        "occurredAt": "2026-07-19T14:14:08.000Z",
+        "url": "https://github.com/kilmidas/oss-maintainer-evidence/issues/7",
+        "title": "Collection rejects numeric pull request and issue routes",
+        "attributionRule": "issue.closed_by.login and issue.closed_at",
+        "type": "closed_issue"
+      },
+      {
+        "id": "4922955170",
+        "actor": "kilmidas",
+        "occurredAt": "2026-07-19T14:02:21.000Z",
+        "url": "https://github.com/kilmidas/oss-maintainer-evidence/issues/5",
+        "title": "Package verification fails with a cold npm cache",
+        "attributionRule": "issue.closed_by.login and issue.closed_at",
+        "type": "closed_issue"
+      }
+    ],
+    "issueComments": []
+  },
+  "summary": {
+    "releases": 0,
+    "authoredPullRequests": 2,
+    "mergedPullRequests": 2,
+    "reviews": 0,
+    "openedIssues": 2,
+    "closedIssues": 2,
+    "issueComments": 0,
+    "total": 8
+  },
+  "community": {
+    "readme": {
+      "status": "present",
+      "sourceUrl": "https://github.com/kilmidas/oss-maintainer-evidence/blob/main/README.md"
+    },
+    "license": {
+      "status": "present",
+      "sourceUrl": "https://github.com/kilmidas/oss-maintainer-evidence/blob/main/LICENSE"
+    },
+    "contributing": {
+      "status": "present",
+      "sourceUrl": "https://github.com/kilmidas/oss-maintainer-evidence/blob/main/CONTRIBUTING.md"
+    },
+    "codeOfConduct": {
+      "status": "present",
+      "sourceUrl": "https://github.com/kilmidas/oss-maintainer-evidence/blob/main/CODE_OF_CONDUCT.md"
+    },
+    "issueTemplate": {
+      "status": "absent"
+    },
+    "pullRequestTemplate": {
+      "status": "present",
+      "sourceUrl": "https://github.com/kilmidas/oss-maintainer-evidence/blob/main/.github/PULL_REQUEST_TEMPLATE.md"
+    },
+    "securityPolicy": {
+      "status": "present",
+      "sourceUrl": "https://github.com/kilmidas/oss-maintainer-evidence/blob/main/SECURITY.md"
+    }
+  },
+  "adoption": {
+    "stars": 0,
+    "forks": 0,
+    "watchers": 0,
+    "contributors": 1,
+    "observedAt": "2026-07-19T14:17:34.306Z"
+  },
+  "pagination": {
+    "releases": {
+      "fetched": 0,
+      "truncated": false
+    },
+    "authoredPullRequests": {
+      "fetched": 2,
+      "truncated": false
+    },
+    "mergedPullRequests": {
+      "fetched": 2,
+      "truncated": false
+    },
+    "reviews": {
+      "fetched": 0,
+      "truncated": false
+    },
+    "openedIssues": {
+      "fetched": 2,
+      "truncated": false
+    },
+    "closedIssues": {
+      "fetched": 2,
+      "truncated": false
+    },
+    "issueComments": {
+      "fetched": 4,
+      "truncated": false
+    },
+    "contributors": {
+      "fetched": 1,
+      "truncated": false
+    }
+  },
+  "limitations": []
+}

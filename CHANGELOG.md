@@ -13,4 +13,9 @@ All notable changes to this project are documented in this file. The format foll
 - Safe GitHub CLI process isolation, deterministic output, and atomic no-overwrite file creation.
 - Public contribution, conduct, security, support, and architecture documentation.
 
+### Fixed
+
+- Package installation verification now works with a fresh npm cache while lifecycle scripts remain disabled.
+- Pull request and issue detail routes now accept positive safe numeric identifiers and reject invalid numeric values.
+
 [0.1.0]: https://github.com/kilmidas/oss-maintainer-evidence/releases/tag/v0.1.0
