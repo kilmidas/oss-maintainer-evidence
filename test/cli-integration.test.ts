@@ -16,6 +16,8 @@ import test from "node:test";
 const projectRoot = resolve(".");
 const cli = resolve("dist/cli.js");
 const secret = "ghp_syntheticcredentialthatmustneverappear";
+const fakeFetch = resolve("test/fixtures/fake-fetch.mjs");
+const completeReport = resolve("test/golden/report-complete.json");
 
 const withFakeGh = (run: (directory: string) => void) => {
   const directory = mkdtempSync(join(tmpdir(), "oss-evidence-cli-"));
@@ -122,4 +124,55 @@ test("CLI integration maps invalid input and directory output errors", () => {
     assert.equal(output.status, 5);
     assert.equal(output.stdout, "");
   });
+});
+
+const invokeVerify = (mode: string, reportPath = completeReport) =>
+  spawnSync(
+    process.execPath,
+    ["--import", fakeFetch, cli, "verify", reportPath],
+    {
+      cwd: projectRoot,
+      encoding: "utf8",
+      env: { ...process.env, FAKE_FETCH_MODE: mode, SYNTHETIC_TOKEN: secret },
+    },
+  );
+
+test("CLI integration verifies a valid report and exits zero", () => {
+  const result = invokeVerify("pass");
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /^PASS 200 https:\/\/github\.com\/acme\/demo$/m);
+  assert.match(
+    result.stdout,
+    /Verified 1 of 1 evidence links; 1 unique HTTP targets\.$/m,
+  );
+  assert.equal(result.stderr, "");
+});
+
+test("CLI integration renders failed links and exits six", () => {
+  const result = invokeVerify("not-found");
+
+  assert.equal(result.status, 6, result.stderr);
+  assert.match(
+    result.stdout,
+    /^FAIL http_404 https:\/\/github\.com\/acme\/demo$/m,
+  );
+  assert.equal(result.stderr, "");
+});
+
+test("CLI integration rejects invalid reports before output", () => {
+  const result = invokeVerify("pass", resolve("package.json"));
+
+  assert.equal(result.status, 2);
+  assert.equal(result.stdout, "");
+  assert.match(result.stderr, /schema version 1\.0/i);
+});
+
+test("CLI integration never exposes transport failure details", () => {
+  const result = invokeVerify("network-error");
+
+  assert.equal(result.status, 6);
+  assert.match(result.stdout, /^FAIL network /m);
+  assert.equal(result.stdout.includes(secret), false);
+  assert.equal(result.stderr.includes(secret), false);
 });

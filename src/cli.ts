@@ -3,6 +3,7 @@
 import { getVersion } from "./version.js";
 
 const HELP_TEXT = `Usage: oss-evidence collect owner/repository --maintainer username
+       oss-evidence verify <report.json>
 
 Options:
   --since <90d|ISO_TIMESTAMP>  Inclusive reporting-window start (default: 90d)
@@ -22,6 +23,11 @@ function reportPackageMetadataFailure(): void {
 
 function reportCollectionStartupFailure(): void {
   process.stderr.write("Unable to start collection. Reinstall oss-evidence.\n");
+  process.exitCode = 1;
+}
+
+function reportVerificationStartupFailure(): void {
+  process.stderr.write("Unable to start verification. Reinstall oss-evidence.\n");
   process.exitCode = 1;
 }
 
@@ -92,6 +98,70 @@ async function runCollect(args: readonly string[]): Promise<void> {
   }
 }
 
+async function runVerify(args: readonly string[]): Promise<void> {
+  let modules: [
+    typeof import("./domain/input.js"),
+    typeof import("./errors.js"),
+    typeof import("./io/report-input.js"),
+    typeof import("./domain/verification.js"),
+    typeof import("./app/verify.js"),
+    typeof import("./render/verification.js"),
+  ];
+  try {
+    modules = await Promise.all([
+      import("./domain/input.js"),
+      import("./errors.js"),
+      import("./io/report-input.js"),
+      import("./domain/verification.js"),
+      import("./app/verify.js"),
+      import("./render/verification.js"),
+    ]);
+    if (
+      !isFunction(modules[0].parseVerifyInput) ||
+      !isFunction(modules[1].OperationalError) ||
+      !isFunction(modules[1].VerificationFailedError) ||
+      !isFunction(modules[1].sanitizeErrorMessage) ||
+      !isFunction(modules[2].readReportJson) ||
+      !isFunction(modules[3].createVerificationPlan) ||
+      !isFunction(modules[4].runVerification) ||
+      !isFunction(modules[5].renderVerification)
+    )
+      throw new Error("invalid verification modules");
+  } catch {
+    reportVerificationStartupFailure();
+    return;
+  }
+
+  const [inputModule, errorModule, reportInput, verification, app, render] =
+    modules;
+  try {
+    const input = inputModule.parseVerifyInput(args);
+    const value = await reportInput.readReportJson(input.reportPath);
+    const plan = verification.createVerificationPlan(value);
+    const report = await app.runVerification(plan);
+    process.stdout.write(render.renderVerification(report));
+    if (report.status === "failed") {
+      const failure = new errorModule.VerificationFailedError(
+        "One or more evidence links could not be verified.",
+        report,
+      );
+      process.exitCode = failure.exitCode;
+    }
+  } catch (error) {
+    const operational =
+      error instanceof errorModule.OperationalError
+        ? error
+        : new errorModule.VerificationFailedError(
+            "Evidence link verification could not be completed.",
+            undefined,
+          );
+    process.stderr.write(
+      `${errorModule.sanitizeErrorMessage(operational.message)}\n`,
+    );
+    process.exitCode = operational.exitCode;
+  }
+}
+
 async function main(): Promise<void> {
   const args = process.argv.slice(2);
   if (args.length === 1 && args[0] === "--help") {
@@ -102,7 +172,8 @@ async function main(): Promise<void> {
     } catch {
       reportPackageMetadataFailure();
     }
-  } else await runCollect(args);
+  } else if (args[0] === "verify") await runVerify(args);
+  else await runCollect(args);
 }
 
 await main().catch(reportCollectionStartupFailure);

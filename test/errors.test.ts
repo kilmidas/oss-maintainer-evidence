@@ -8,6 +8,7 @@ import {
   OutputWriteError,
   PartialCollectionError,
   RequiredCollectionError,
+  VerificationFailedError,
   sanitizeErrorMessage,
 } from "../src/errors.js";
 
@@ -36,6 +37,11 @@ test("error categories expose stable exit codes", () => {
       error: new OutputWriteError("Output could not be written."),
       exitCode: 5,
       name: "OutputWriteError",
+    },
+    {
+      error: new VerificationFailedError("Verification failed.", {}),
+      exitCode: 6,
+      name: "VerificationFailedError",
     },
   ];
 

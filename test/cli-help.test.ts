@@ -64,6 +64,7 @@ test("prints command help without standard-error output", () => {
     result.stdout,
     /^Usage: oss-evidence collect owner\/repository --maintainer username$/m,
   );
+  assert.match(result.stdout, /^       oss-evidence verify <report.json>$/m);
   assert.equal(result.stderr, "");
 });
 
