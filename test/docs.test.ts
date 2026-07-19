@@ -125,6 +125,31 @@ test("ecosystem importance narrative rejects adoption and endorsement claims", (
   );
 });
 
+test("public documentation links the ecosystem evidence without overclaiming", () => {
+  const readme = read("README.md");
+  const limitations = read("docs/limitations.md");
+  assert.match(
+    readme,
+    /\[Ecosystem importance evidence]\(docs\/ecosystem-importance\.md\)/,
+  );
+  assert.match(
+    limitations,
+    /\[ecosystem importance evidence]\(ecosystem-importance\.md\)/i,
+  );
+  assert.match(limitations, /does not demonstrate external adoption/i);
+});
+
+test("the standard check validates the committed ecosystem ledger", () => {
+  const scripts = (
+    JSON.parse(read("package.json")) as { scripts: Record<string, string> }
+  ).scripts;
+  assert.equal(
+    scripts["evidence:check"],
+    "node scripts/validate-ecosystem-evidence.mjs",
+  );
+  assert.match(scripts.check, /npm run evidence:check/);
+});
+
 function escapeRegex(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
