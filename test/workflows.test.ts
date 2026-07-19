@@ -17,8 +17,8 @@ const workflowNames = [
   "release-artifacts.yml",
 ] as const;
 const pinnedActions = {
-  checkout: "actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10",
-  setupNode: "actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38",
+  checkout: "actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0",
+  setupNode: "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
   dependencyReview:
     "actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294",
   attestBuildProvenance:
