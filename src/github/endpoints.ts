@@ -90,8 +90,11 @@ export const ENDPOINTS = {
   },
 } as const satisfies Record<string, EndpointContract>;
 const SAFE = /^[A-Za-z0-9][A-Za-z0-9_.-]{0,99}$/;
-function valid(v: unknown): v is string {
-  return typeof v === "string" && SAFE.test(v) && !v.includes("..");
+function valid(v: unknown): v is string | number {
+  return (
+    (typeof v === "string" && SAFE.test(v) && !v.includes("..")) ||
+    (typeof v === "number" && Number.isSafeInteger(v) && v > 0)
+  );
 }
 export function buildEndpoint(
   contract: EndpointContract,

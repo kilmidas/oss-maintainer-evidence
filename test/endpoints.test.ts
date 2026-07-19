@@ -17,6 +17,34 @@ test("builds fixed GitHub API endpoint and rejects traversal", () => {
   );
 });
 
+test("builds detail endpoints from positive safe numeric identifiers", () => {
+  assert.equal(
+    buildEndpoint(ENDPOINTS.pull, {
+      owner: "octo",
+      repo: "hello",
+      number: 7,
+    }).path,
+    "/repos/octo/hello/pulls/7",
+  );
+  assert.equal(
+    buildEndpoint(ENDPOINTS.issue, {
+      owner: "octo",
+      repo: "hello",
+      number: 9,
+    }).path,
+    "/repos/octo/hello/issues/9",
+  );
+  for (const number of [0, -1, 1.5, Number.MAX_SAFE_INTEGER + 1]) {
+    assert.throws(() =>
+      buildEndpoint(ENDPOINTS.pull, {
+        owner: "octo",
+        repo: "hello",
+        number,
+      }),
+    );
+  }
+});
+
 test("registry covers all planned route contracts", () => {
   const expected = {
     repository: ["none", "404", "required"],
