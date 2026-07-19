@@ -1,6 +1,14 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { dirname, resolve } from "node:path";
+import {
+  copyFileSync,
+  mkdirSync,
+  mkdtempSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
+import { tmpdir } from "node:os";
+import { dirname, join, resolve } from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
@@ -130,6 +138,71 @@ test("input accepts timezone-bearing timestamps and normalizes them to UTC", () 
   );
 
   assert.equal(input.since, "2026-07-19T12:34:56.789Z");
+});
+
+test("input normalizes leap seconds with offsets and fractional milliseconds", () => {
+  const cases = [
+    {
+      since: "2016-12-31T23:59:60Z",
+      expected: "2017-01-01T00:00:00.000Z",
+    },
+    {
+      since: "2017-01-01T08:59:60.5+09:00",
+      expected: "2017-01-01T00:00:00.500Z",
+    },
+  ];
+
+  for (const { since, expected } of cases) {
+    const input = parseCollectInput(
+      ["collect", "OpenAI/Codex", "--maintainer", "octocat", "--since", since],
+      NOW,
+    );
+
+    assert.equal(input.since, expected, since);
+  }
+});
+
+test("input rejects malformed, invalid-date, and future leap seconds", () => {
+  for (const since of [
+    "2016-12-31T23:59:61Z",
+    "2016-02-30T23:59:60Z",
+    "2016-12-31T12:34:60Z",
+    "2016-12-30T23:59:60Z",
+    "2016-12-31T23:59:60.0000Z",
+  ]) {
+    assert.throws(
+      () =>
+        parseCollectInput(
+          [
+            "collect",
+            "OpenAI/Codex",
+            "--maintainer",
+            "octocat",
+            "--since",
+            since,
+          ],
+          NOW,
+        ),
+      InputError,
+      since,
+    );
+  }
+
+  assert.throws(
+    () =>
+      parseCollectInput(
+        [
+          "collect",
+          "OpenAI/Codex",
+          "--maintainer",
+          "octocat",
+          "--since",
+          "2016-12-31T23:59:60.001Z",
+        ],
+        new Date("2017-01-01T00:00:00.000Z"),
+      ),
+    InputError,
+  );
 });
 
 test("input rejects timestamps with submillisecond precision", () => {
@@ -408,3 +481,123 @@ test("CLI reports invalid input as one sanitized line with exit 2", () => {
   assert.equal(result.stderr.trim().length > 0, true);
   assert.equal(result.stderr.split("\n").length, 2);
 });
+
+test("CLI reports collection module startup failures without raw details", () => {
+  const installedRoot = mkdtempSync(
+    join(tmpdir(), "oss-evidence-collect-startup-"),
+  );
+  const installedDist = resolve(installedRoot, "dist");
+
+  try {
+    mkdirSync(installedDist);
+    for (const file of ["cli.js", "version.js", "package.json"]) {
+      copyFileSync(
+        resolve(projectRoot, "dist", file),
+        resolve(installedDist, file),
+      );
+    }
+
+    const result = spawnSync(
+      process.execPath,
+      [
+        resolve(installedDist, "cli.js"),
+        "collect",
+        "OpenAI/Codex",
+        "--maintainer",
+        "octocat",
+      ],
+      { cwd: installedRoot, encoding: "utf8" },
+    );
+
+    assert.equal(result.status, 1);
+    assert.equal(result.stdout, "");
+    assert.equal(
+      result.stderr,
+      "Unable to start collection. Reinstall oss-evidence.\n",
+    );
+    assert.equal(result.stderr.includes(installedRoot), false);
+    assert.doesNotMatch(
+      result.stderr,
+      /ERR_MODULE_NOT_FOUND|Cannot find module|domain\/input|errors\.js|at async/,
+    );
+  } finally {
+    rmSync(installedRoot, { recursive: true, force: true });
+  }
+});
+
+const malformedCollectionModules = [
+  {
+    label: "missing parser export",
+    writeModules(installedDist: string) {
+      writeFileSync(
+        resolve(installedDist, "domain/input.js"),
+        "export const unavailable = true;\n",
+      );
+      copyFileSync(
+        resolve(projectRoot, "dist/errors.js"),
+        resolve(installedDist, "errors.js"),
+      );
+    },
+  },
+  {
+    label: "missing error exports",
+    writeModules(installedDist: string) {
+      copyFileSync(
+        resolve(projectRoot, "dist/domain/input.js"),
+        resolve(installedDist, "domain/input.js"),
+      );
+      writeFileSync(
+        resolve(installedDist, "errors.js"),
+        "export class InputError extends Error {}\n",
+      );
+    },
+  },
+] as const;
+
+for (const { label, writeModules } of malformedCollectionModules) {
+  test(`CLI reports ${label} as a safe startup failure`, () => {
+    const installedRoot = mkdtempSync(
+      join(tmpdir(), "oss-evidence-collect-malformed-"),
+    );
+    const installedDist = resolve(installedRoot, "dist");
+
+    try {
+      mkdirSync(resolve(installedDist, "domain"), { recursive: true });
+      for (const file of ["cli.js", "version.js", "package.json"]) {
+        copyFileSync(
+          resolve(projectRoot, "dist", file),
+          resolve(installedDist, file),
+        );
+      }
+      writeModules(installedDist);
+
+      const result = spawnSync(
+        process.execPath,
+        [
+          resolve(installedDist, "cli.js"),
+          "collect",
+          "OpenAI/Codex",
+          "--maintainer",
+          "octocat",
+        ],
+        { cwd: installedRoot, encoding: "utf8" },
+      );
+
+      assert.equal(result.status, 1, label);
+      assert.equal(result.stdout, "", label);
+      assert.equal(
+        result.stderr,
+        "Unable to start collection. Reinstall oss-evidence.\n",
+        label,
+      );
+      assert.equal(result.stderr.includes(installedRoot), false, label);
+      assert.doesNotMatch(
+        result.stderr,
+        /TypeError|ERR_MODULE|Cannot find module|file:\/\/|at async/,
+        label,
+      );
+    } finally {
+      rmSync(installedRoot, { recursive: true, force: true });
+    }
+  });
+}

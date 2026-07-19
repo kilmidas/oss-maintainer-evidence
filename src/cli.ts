@@ -15,14 +15,49 @@ function reportPackageMetadataFailure(): void {
   process.exitCode = 1;
 }
 
+function reportCollectionStartupFailure(): void {
+  process.stderr.write("Unable to start collection. Reinstall oss-evidence.\n");
+  process.exitCode = 1;
+}
+
+function isErrorConstructor(value: unknown): boolean {
+  return typeof value === "function" && value.prototype instanceof Error;
+}
+
 async function runCollect(args: readonly string[]): Promise<void> {
-  const { parseCollectInput } = await import("./domain/input.js");
+  let collectionModules: [
+    typeof import("./domain/input.js"),
+    typeof import("./errors.js"),
+  ];
+
+  try {
+    const modules = await Promise.all([
+      import("./domain/input.js"),
+      import("./errors.js"),
+    ]);
+    const [inputModule, errorModule] = modules;
+    if (
+      typeof inputModule.parseCollectInput !== "function" ||
+      !isErrorConstructor(errorModule.InputError) ||
+      !isErrorConstructor(errorModule.OperationalError) ||
+      !isErrorConstructor(errorModule.RequiredCollectionError) ||
+      typeof errorModule.sanitizeErrorMessage !== "function"
+    ) {
+      throw new Error("Invalid collection module exports.");
+    }
+    collectionModules = modules;
+  } catch {
+    reportCollectionStartupFailure();
+    return;
+  }
+
+  const [{ parseCollectInput }, errorModule] = collectionModules;
   const {
     InputError,
     OperationalError,
     RequiredCollectionError,
     sanitizeErrorMessage,
-  } = await import("./errors.js");
+  } = errorModule;
 
   try {
     parseCollectInput(args, new Date());
@@ -57,4 +92,4 @@ async function main(): Promise<void> {
   }
 }
 
-await main();
+await main().catch(reportCollectionStartupFailure);

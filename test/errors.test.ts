@@ -97,6 +97,76 @@ test("error sanitizer preserves ordinary public text", () => {
   assert.equal(sanitizeErrorMessage(message), message);
 });
 
+test("error sanitizer redacts folded authorization and bearer credentials", () => {
+  const cases = [
+    {
+      message: "Authorization:\n  opaque-secret-value",
+      exposedParts: ["opaque", "secret", "value"],
+    },
+    {
+      message: "Authorization: Bearer\r\n token-fragment",
+      exposedParts: ["Bearer", "token-fragment"],
+    },
+    {
+      message: "Bearer\n opaque-folded-value",
+      exposedParts: ["opaque-folded-value"],
+    },
+  ];
+
+  for (const { message, exposedParts } of cases) {
+    const sanitized = sanitizeErrorMessage(message);
+
+    assert.match(sanitized, /\[REDACTED\]/);
+    for (const exposedPart of exposedParts) {
+      assert.equal(sanitized.includes(exposedPart), false, message);
+    }
+  }
+});
+
+test("error sanitizer handles repeated ordinary and folded credentials", () => {
+  const credentials = [
+    "ordinary-secret-one",
+    "ordinary-secret-two",
+    "folded-secret-three",
+    "folded-secret-four",
+  ];
+  const message = [
+    "Public repository message before credentials.",
+    `Authorization: ${credentials[0]}`,
+    `Bearer ${credentials[1]}`,
+    `Authorization:\n ${credentials[2]}`,
+    `Bearer\r\n ${credentials[3]}`,
+    "Public corrective action after credentials.",
+  ].join("\n");
+
+  const sanitized = sanitizeErrorMessage(message);
+
+  assert.match(sanitized, /Public repository message before credentials\./);
+  assert.match(sanitized, /Public corrective action after credentials\./);
+  for (const credential of credentials) {
+    assert.equal(sanitized.includes(credential), false, credential);
+  }
+  assert.equal(sanitized.match(/\[REDACTED\]/g)?.length, 4);
+});
+
+test("error sanitizer removes every folded bearer segment and preserves the next line", () => {
+  const cases = [
+    "Bearer opaque-part-one\r\n opaque-part-two\nPublic tail.",
+    "Bearer opaque-before-space \r\n opaque-after-space\nPublic tail.",
+    "Bearer \r\n opaque-after-spaced-fold\r\nPublic tail.",
+  ];
+
+  for (const message of cases) {
+    const sanitized = sanitizeErrorMessage(message);
+
+    assert.equal(sanitized.includes("opaque"), false, message);
+    assert.equal(sanitized.includes("part-one"), false, message);
+    assert.equal(sanitized.includes("part-two"), false, message);
+    assert.match(sanitized, /^Bearer \[REDACTED\]/);
+    assert.match(sanitized, /Public tail\.$/);
+  }
+});
+
 test("operational errors expose one concise sanitized line", () => {
   const credential = "github_pat_11AAabcdefghijklmnopqrstuvwxyz1234567890";
   const error = new InputError(

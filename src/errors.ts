@@ -1,6 +1,8 @@
 const REDACTION = "[REDACTED]";
-const AUTHORIZATION_HEADER = /(\bauthorization[ \t]*:[ \t]*)[^\r\n]*/gi;
-const BEARER_CREDENTIAL = /\b(Bearer)[ \t]+\S+/gi;
+const AUTHORIZATION_HEADER =
+  /(\bauthorization[ \t]*:)[ \t]*[^\r\n]*(?:\r?\n[ \t]+[^\r\n]*)*/gi;
+const BEARER_CREDENTIAL =
+  /\b(Bearer)(?:[ \t]+\S+(?:[ \t]*\r?\n[ \t]+[^\r\n]*)*|[ \t]*\r?\n[ \t]+[^\r\n]*(?:\r?\n[ \t]+[^\r\n]*)*)/gi;
 const GITHUB_TOKEN =
   /\b(?:gh[pousr]_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,})\b/g;
 const OPENAI_KEY = /\bsk-[A-Za-z0-9_-]{20,}\b/g;
@@ -9,7 +11,7 @@ export type OperationalExitCode = 2 | 3 | 4 | 5;
 
 export function sanitizeErrorMessage(message: string): string {
   return message
-    .replace(AUTHORIZATION_HEADER, `$1${REDACTION}`)
+    .replace(AUTHORIZATION_HEADER, `$1 ${REDACTION}`)
     .replace(BEARER_CREDENTIAL, `$1 ${REDACTION}`)
     .replace(GITHUB_TOKEN, REDACTION)
     .replace(OPENAI_KEY, REDACTION);

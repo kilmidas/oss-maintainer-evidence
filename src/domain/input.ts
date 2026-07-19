@@ -117,6 +117,8 @@ function parseAbsoluteSince(value: string, untilMilliseconds: number): string {
   const hour = Number(match[4]);
   const minute = Number(match[5]);
   const second = Number(match[6]);
+  const isLeapSecond = second === 60;
+  const normalizedSecond = isLeapSecond ? 59 : second;
   const fractionalSeconds = match[7] ?? "";
   const millisecond = Number(fractionalSeconds.padEnd(3, "0").slice(0, 3));
   const zone = match[8];
@@ -130,7 +132,7 @@ function parseAbsoluteSince(value: string, untilMilliseconds: number): string {
     day > 31 ||
     hour > 23 ||
     minute > 59 ||
-    second > 59 ||
+    second > 60 ||
     offsetHour > 23 ||
     offsetMinute > 59
   ) {
@@ -139,14 +141,14 @@ function parseAbsoluteSince(value: string, untilMilliseconds: number): string {
 
   const wallClock = new Date(0);
   wallClock.setUTCFullYear(year, month - 1, day);
-  wallClock.setUTCHours(hour, minute, second, millisecond);
+  wallClock.setUTCHours(hour, minute, normalizedSecond, millisecond);
   if (
     wallClock.getUTCFullYear() !== year ||
     wallClock.getUTCMonth() !== month - 1 ||
     wallClock.getUTCDate() !== day ||
     wallClock.getUTCHours() !== hour ||
     wallClock.getUTCMinutes() !== minute ||
-    wallClock.getUTCSeconds() !== second
+    wallClock.getUTCSeconds() !== normalizedSecond
   ) {
     throw invalidInput("Since timestamp is invalid.");
   }
@@ -156,7 +158,23 @@ function parseAbsoluteSince(value: string, untilMilliseconds: number): string {
     zone === "Z" || zone === "z"
       ? 0
       : offsetSign * (offsetHour * 60 + offsetMinute) * 60 * 1000;
-  const since = new Date(wallClock.getTime() - offsetMilliseconds);
+  const normalizedMilliseconds = wallClock.getTime() - offsetMilliseconds;
+  if (isLeapSecond) {
+    const beforeLeapSecond = new Date(normalizedMilliseconds);
+    const afterLeapSecond = new Date(normalizedMilliseconds + 1000);
+    if (
+      beforeLeapSecond.getUTCHours() !== 23 ||
+      beforeLeapSecond.getUTCMinutes() !== 59 ||
+      beforeLeapSecond.getUTCSeconds() !== 59 ||
+      afterLeapSecond.getUTCDate() !== 1 ||
+      afterLeapSecond.getUTCHours() !== 0 ||
+      afterLeapSecond.getUTCMinutes() !== 0 ||
+      afterLeapSecond.getUTCSeconds() !== 0
+    ) {
+      throw invalidInput("Since timestamp is invalid.");
+    }
+  }
+  const since = new Date(normalizedMilliseconds + (isLeapSecond ? 1000 : 0));
   const sinceMilliseconds = since.getTime();
 
   if (!Number.isFinite(sinceMilliseconds)) {
