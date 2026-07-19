@@ -5,6 +5,7 @@ import {
   existsSync,
   mkdirSync,
   mkdtempSync,
+  readFileSync,
   rmSync,
   writeFileSync,
 } from "node:fs";
@@ -59,4 +60,13 @@ test("clean script removes only isolated compiler output", () => {
   } finally {
     rmSync(temporaryRoot, { recursive: true, force: true });
   }
+});
+
+test("package verifier allows a cold npm cache to resolve dependencies", () => {
+  const source = readFileSync(
+    resolve(projectRoot, "scripts/verify-package.mjs"),
+    "utf8",
+  );
+
+  assert.doesNotMatch(source, /["']--offline["']/);
 });

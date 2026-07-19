@@ -58,14 +58,7 @@ try {
 
   runNpm(
     npmExecPath,
-    [
-      "install",
-      "--ignore-scripts",
-      "--no-audit",
-      "--no-fund",
-      "--offline",
-      archive,
-    ],
+    ["install", "--ignore-scripts", "--no-audit", "--no-fund", archive],
     installation,
   );
 
