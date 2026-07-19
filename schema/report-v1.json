@@ -7,7 +7,8 @@
       "const": "1.0"
     },
     "generatedAt": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,3})?Z$"
     },
     "status": {
       "type": "string",
@@ -47,10 +48,12 @@
           "minLength": 1
         },
         "since": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,3})?Z$"
         },
         "until": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,3})?Z$"
         },
         "maxItems": {
           "type": "integer",
@@ -97,7 +100,8 @@
           "format": "uri"
         },
         "observedAt": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,3})?Z$"
         }
       },
       "required": [
@@ -122,16 +126,13 @@
                 "type": "string",
                 "minLength": 1
               },
-              "type": {
-                "type": "string",
-                "minLength": 1
-              },
               "actor": {
                 "type": "string",
                 "minLength": 1
               },
               "occurredAt": {
-                "type": "string"
+                "type": "string",
+                "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,3})?Z$"
               },
               "url": {
                 "type": "string",
@@ -143,16 +144,20 @@
               "attributionRule": {
                 "type": "string",
                 "minLength": 1
+              },
+              "type": {
+                "type": "string",
+                "const": "release"
               }
             },
             "required": [
               "id",
-              "type",
               "actor",
               "occurredAt",
               "url",
               "title",
-              "attributionRule"
+              "attributionRule",
+              "type"
             ],
             "additionalProperties": false
           }
@@ -166,16 +171,13 @@
                 "type": "string",
                 "minLength": 1
               },
-              "type": {
-                "type": "string",
-                "minLength": 1
-              },
               "actor": {
                 "type": "string",
                 "minLength": 1
               },
               "occurredAt": {
-                "type": "string"
+                "type": "string",
+                "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,3})?Z$"
               },
               "url": {
                 "type": "string",
@@ -187,16 +189,20 @@
               "attributionRule": {
                 "type": "string",
                 "minLength": 1
+              },
+              "type": {
+                "type": "string",
+                "const": "authored_pull_request"
               }
             },
             "required": [
               "id",
-              "type",
               "actor",
               "occurredAt",
               "url",
               "title",
-              "attributionRule"
+              "attributionRule",
+              "type"
             ],
             "additionalProperties": false
           }
@@ -210,16 +216,13 @@
                 "type": "string",
                 "minLength": 1
               },
-              "type": {
-                "type": "string",
-                "minLength": 1
-              },
               "actor": {
                 "type": "string",
                 "minLength": 1
               },
               "occurredAt": {
-                "type": "string"
+                "type": "string",
+                "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,3})?Z$"
               },
               "url": {
                 "type": "string",
@@ -231,16 +234,20 @@
               "attributionRule": {
                 "type": "string",
                 "minLength": 1
+              },
+              "type": {
+                "type": "string",
+                "const": "merged_pull_request"
               }
             },
             "required": [
               "id",
-              "type",
               "actor",
               "occurredAt",
               "url",
               "title",
-              "attributionRule"
+              "attributionRule",
+              "type"
             ],
             "additionalProperties": false
           }
@@ -254,16 +261,13 @@
                 "type": "string",
                 "minLength": 1
               },
-              "type": {
-                "type": "string",
-                "minLength": 1
-              },
               "actor": {
                 "type": "string",
                 "minLength": 1
               },
               "occurredAt": {
-                "type": "string"
+                "type": "string",
+                "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,3})?Z$"
               },
               "url": {
                 "type": "string",
@@ -275,16 +279,20 @@
               "attributionRule": {
                 "type": "string",
                 "minLength": 1
+              },
+              "type": {
+                "type": "string",
+                "const": "review"
               }
             },
             "required": [
               "id",
-              "type",
               "actor",
               "occurredAt",
               "url",
               "title",
-              "attributionRule"
+              "attributionRule",
+              "type"
             ],
             "additionalProperties": false
           }
@@ -298,16 +306,13 @@
                 "type": "string",
                 "minLength": 1
               },
-              "type": {
-                "type": "string",
-                "minLength": 1
-              },
               "actor": {
                 "type": "string",
                 "minLength": 1
               },
               "occurredAt": {
-                "type": "string"
+                "type": "string",
+                "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,3})?Z$"
               },
               "url": {
                 "type": "string",
@@ -319,16 +324,20 @@
               "attributionRule": {
                 "type": "string",
                 "minLength": 1
+              },
+              "type": {
+                "type": "string",
+                "const": "opened_issue"
               }
             },
             "required": [
               "id",
-              "type",
               "actor",
               "occurredAt",
               "url",
               "title",
-              "attributionRule"
+              "attributionRule",
+              "type"
             ],
             "additionalProperties": false
           }
@@ -342,16 +351,13 @@
                 "type": "string",
                 "minLength": 1
               },
-              "type": {
-                "type": "string",
-                "minLength": 1
-              },
               "actor": {
                 "type": "string",
                 "minLength": 1
               },
               "occurredAt": {
-                "type": "string"
+                "type": "string",
+                "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,3})?Z$"
               },
               "url": {
                 "type": "string",
@@ -363,16 +369,20 @@
               "attributionRule": {
                 "type": "string",
                 "minLength": 1
+              },
+              "type": {
+                "type": "string",
+                "const": "closed_issue"
               }
             },
             "required": [
               "id",
-              "type",
               "actor",
               "occurredAt",
               "url",
               "title",
-              "attributionRule"
+              "attributionRule",
+              "type"
             ],
             "additionalProperties": false
           }
@@ -386,16 +396,13 @@
                 "type": "string",
                 "minLength": 1
               },
-              "type": {
-                "type": "string",
-                "minLength": 1
-              },
               "actor": {
                 "type": "string",
                 "minLength": 1
               },
               "occurredAt": {
-                "type": "string"
+                "type": "string",
+                "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,3})?Z$"
               },
               "url": {
                 "type": "string",
@@ -407,16 +414,20 @@
               "attributionRule": {
                 "type": "string",
                 "minLength": 1
+              },
+              "type": {
+                "type": "string",
+                "const": "issue_comment"
               }
             },
             "required": [
               "id",
-              "type",
               "actor",
               "occurredAt",
               "url",
               "title",
-              "attributionRule"
+              "attributionRule",
+              "type"
             ],
             "additionalProperties": false
           }
@@ -495,25 +506,74 @@
         "type": "string"
       },
       "additionalProperties": {
-        "type": "object",
-        "properties": {
-          "status": {
-            "type": "string",
-            "enum": [
-              "present",
-              "absent",
-              "unavailable"
-            ]
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "const": "present"
+              },
+              "sourceUrl": {
+                "type": "string",
+                "format": "uri"
+              }
+            },
+            "required": [
+              "status",
+              "sourceUrl"
+            ],
+            "additionalProperties": false
           },
-          "sourceUrl": {
-            "type": "string",
-            "format": "uri"
+          {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "const": "absent"
+              },
+              "sourceUrl": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "uri"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "status"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "const": "unavailable"
+              },
+              "sourceUrl": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "uri"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "status"
+            ],
+            "additionalProperties": false
           }
-        },
-        "required": [
-          "status"
-        ],
-        "additionalProperties": false
+        ]
       }
     },
     "adoption": {
@@ -556,7 +616,15 @@
           ]
         },
         "observedAt": {
-          "type": "string"
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,3})?Z$"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       },
       "required": [
