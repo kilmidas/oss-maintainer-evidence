@@ -4,6 +4,7 @@ import type { BuiltEndpoint } from "../github/contracts.js";
 import { ENDPOINTS } from "../github/endpoints.js";
 export const MAX_OUTPUT_BYTES = 8 * 1024 * 1024;
 export const DEFAULT_TIMEOUT_MS = 30_000;
+const DEFAULT_TERMINATION_GRACE_MS = 1_000;
 const ARGS = [
   "api",
   "--hostname",
@@ -44,7 +45,11 @@ function safeMessage(category: GhErrorCategory): string {
 }
 export async function runGhApi(
   endpoint: BuiltEndpoint,
-  opts: { spawn?: Spawn; timeoutMs?: number } = {},
+  opts: {
+    spawn?: Spawn;
+    timeoutMs?: number;
+    terminationGraceMs?: number;
+  } = {},
 ): Promise<{
   status: number;
   headers: Record<string, string>;
@@ -69,34 +74,77 @@ export async function runGhApi(
   let out: Buffer<ArrayBufferLike> = Buffer.alloc(0),
     err: Buffer<ArrayBufferLike> = Buffer.alloc(0),
     timed = false;
+  let terminate = () => {};
   const append = (
     cur: Buffer<ArrayBufferLike>,
     chunk: Buffer<ArrayBufferLike>,
   ) => {
     if (cur.length + chunk.length > MAX_OUTPUT_BYTES) {
       limited = true;
-      child.kill("SIGTERM");
+      terminate();
       return cur;
     }
     return Buffer.concat([cur, chunk]);
   };
-  child.stdout?.on("data", (c: Buffer) => {
+  const onStdout = (c: Buffer) => {
     out = append(out, c);
-  });
-  child.stderr?.on("data", (c: Buffer) => {
+  };
+  const onStderr = (c: Buffer) => {
     err = append(err, c);
-  });
-  const timeout = setTimeout(() => {
-    timed = true;
-    child.kill("SIGTERM");
-  }, opts.timeoutMs ?? DEFAULT_TIMEOUT_MS);
+  };
   const code = await new Promise<number | null>((resolve, reject) => {
-    child.once("error", () =>
-      reject(new GhApiError("executable", safeMessage("executable"))),
-    );
-    child.once("close", resolve);
+    const graceMs = opts.terminationGraceMs ?? DEFAULT_TERMINATION_GRACE_MS;
+    let settled = false;
+    let stopping = false;
+    let forceKill: NodeJS.Timeout | undefined;
+    let abandon: NodeJS.Timeout | undefined;
+    let timeout: NodeJS.Timeout | undefined;
+    const cleanup = () => {
+      if (timeout) clearTimeout(timeout);
+      if (forceKill) clearTimeout(forceKill);
+      if (abandon) clearTimeout(abandon);
+      child.stdout?.removeListener("data", onStdout);
+      child.stderr?.removeListener("data", onStderr);
+      child.removeListener("error", onError);
+      child.removeListener("close", onClose);
+    };
+    const finish = (value: number | null) => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      resolve(value);
+    };
+    const fail = () => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      reject(new GhApiError("executable", safeMessage("executable")));
+    };
+    const onError = () => fail();
+    const onClose = (value: number | null) => finish(value);
+    terminate = () => {
+      if (settled || stopping) return;
+      stopping = true;
+      child.kill("SIGTERM");
+      forceKill = setTimeout(() => {
+        if (settled) return;
+        child.kill("SIGKILL");
+        abandon = setTimeout(() => {
+          if (settled) return;
+          child.unref();
+          finish(null);
+        }, graceMs);
+      }, graceMs);
+    };
+    child.stdout?.on("data", onStdout);
+    child.stderr?.on("data", onStderr);
+    child.once("error", onError);
+    child.once("close", onClose);
+    timeout = setTimeout(() => {
+      timed = true;
+      terminate();
+    }, opts.timeoutMs ?? DEFAULT_TIMEOUT_MS);
   });
-  clearTimeout(timeout);
   if (timed) throw new GhApiError("timeout", safeMessage("timeout"));
   if (limited) throw new GhApiError("output", safeMessage("output"));
   const framing = out.toString();

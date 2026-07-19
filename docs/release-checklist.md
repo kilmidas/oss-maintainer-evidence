@@ -20,8 +20,8 @@ Use this checklist from the exact commit proposed for release. The package remai
 
 - [ ] Create and push only the annotated `v0.1.0` tag at the frozen release commit.
 - [ ] Wait for `release-artifacts.yml` to finish successfully.
-- [ ] Download the workflow-produced `.tgz`, checksum, and provenance data into a fresh temporary directory.
-- [ ] Run `gh attestation verify --repo kilmidas/oss-maintainer-evidence` on the downloaded archive.
+- [ ] Download the workflow-produced `.tgz` and checksum into a fresh temporary directory.
+- [ ] Verify the GitHub-hosted provenance with `gh attestation verify --repo kilmidas/oss-maintainer-evidence` on the downloaded archive.
 - [ ] Verify the recorded SHA-256 checksum before installing the archive.
 - [ ] Compare the attested archive file list with the locally reproduced candidate.
 - [ ] Install the archive in a clean directory and verify `--help`, `--version`, and one public JSON collection.
