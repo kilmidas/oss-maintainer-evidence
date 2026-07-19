@@ -18,6 +18,10 @@ export interface CollectInput {
   maxItems: number;
 }
 
+export interface VerifyInput {
+  reportPath: string;
+}
+
 const DEFAULT_SINCE = "90d";
 const DEFAULT_FORMAT: OutputFormat = "markdown";
 const DEFAULT_MAX_ITEMS = 200;
@@ -307,4 +311,19 @@ export function parseCollectInput(
     ...(output === undefined ? {} : { output }),
     maxItems,
   };
+}
+
+export function parseVerifyInput(argv: readonly string[]): VerifyInput {
+  const reportPath = argv[1];
+  if (
+    argv.length !== 2 ||
+    argv[0] !== "verify" ||
+    reportPath === undefined ||
+    reportPath.length === 0 ||
+    hasControlCharacter(reportPath)
+  ) {
+    throw invalidInput("Expected verify <report.json>.");
+  }
+
+  return { reportPath };
 }
