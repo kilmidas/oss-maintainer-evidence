@@ -1,6 +1,6 @@
 # OSS Maintainer Evidence Design
 
-**Status:** Independent review approved, pending owner review  
+**Status:** Owner approved
 **Date:** 2026-07-19  
 **Working repository name:** `oss-maintainer-evidence`  
 **CLI name:** `oss-evidence`
@@ -37,7 +37,7 @@ This design instead focuses on retrospective, verifiable evidence of maintainer 
 
 ## Primary User Flow
 
-1. The maintainer installs Node.js 20 or newer and GitHub CLI.
+1. The maintainer installs Node.js 22 or newer and GitHub CLI.
 2. The maintainer authenticates GitHub CLI through GitHub's supported login flow.
 3. From any terminal, the maintainer runs:
 
@@ -122,7 +122,7 @@ Every activity item requires `id`, `type`, `actor`, `occurredAt`, `url`, `title`
 
 ## Architecture
 
-The project will use TypeScript on Node.js 20 or newer. The runtime will be split into focused modules:
+The project will use TypeScript on Node.js 22 or newer. Node.js 20 reached end of life before this project's first release and is therefore outside the supported runtime matrix. The runtime will be split into focused modules:
 
 1. **CLI layer** parses arguments, validates bounded inputs, selects a renderer, and maps errors to exit codes.
 2. **GitHub CLI adapter** invokes `gh api --hostname github.com` with an argument array and `shell: false`. It owns public-repository preflight, pagination, timeouts, and error translation. No token value is read or printed by the application.
