@@ -65,9 +65,16 @@ const endpointFromUrl = (
   }
   const m = u.pathname.match(/^\/repos\/([^/]+)\/([^/]+)\/releases$/);
   if (!m) throw new GhApiError("protocol");
+  let owner: string, repo: string;
+  try {
+    owner = decodeURIComponent(m[1]);
+    repo = decodeURIComponent(m[2]);
+  } catch {
+    throw new GhApiError("protocol");
+  }
   return buildEndpoint(contract, {
-    owner: decodeURIComponent(m[1]),
-    repo: decodeURIComponent(m[2]),
+    owner,
+    repo,
     page: Number(u.searchParams.get("page") ?? 1),
     per_page: Number(u.searchParams.get("per_page") ?? 100),
   });
