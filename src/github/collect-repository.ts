@@ -134,6 +134,24 @@ const safeChildUrl = (value: string, repositoryUrl: string) => {
   );
 };
 
+const safeReleaseUrl = (value: string, repositoryUrl: string) => {
+  if (!safeChildUrl(value, repositoryUrl)) return false;
+  const repositoryPath = new URL(repositoryUrl).pathname
+    .split("/")
+    .filter(Boolean);
+  const path = new URL(value).pathname.split("/").filter(Boolean);
+  const remainder = path.slice(repositoryPath.length);
+  return (
+    (remainder.length === 2 &&
+      remainder[0] === "releases" &&
+      (remainder[1] === "latest" || /^\d+$/.test(remainder[1]))) ||
+    (remainder.length === 3 &&
+      remainder[0] === "releases" &&
+      remainder[1] === "tag" &&
+      remainder[2].length > 0)
+  );
+};
+
 const limitation = (code: string, resource: string, message: string) => ({
   code,
   resource,
@@ -200,10 +218,7 @@ export async function collectRepository(
       parsed.author.login.toLowerCase() !== input.maintainer.toLowerCase()
     )
       continue;
-    if (
-      !safeChildUrl(parsed.html_url, repository.sourceUrl) ||
-      !new URL(parsed.html_url).pathname.toLowerCase().includes("/releases/")
-    )
+    if (!safeReleaseUrl(parsed.html_url, repository.sourceUrl))
       throw new Error("invalid release source URL");
     releases.push({
       id: String(parsed.id),

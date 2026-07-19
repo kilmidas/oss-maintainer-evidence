@@ -136,6 +136,23 @@ test("rejects malformed or non-canonical required repository and release data", 
       }),
     ),
   );
+  await assert.rejects(
+    collectRepository(
+      input,
+      deps({
+        listReleases: async () => ({
+          items: [
+            {
+              ...published,
+              html_url: "https://github.com/acme/demo/releases/tag/v1/extra",
+            },
+          ],
+          fetched: 1,
+          truncated: false,
+        }),
+      }),
+    ),
+  );
 });
 
 test("uses profile tri-state and first present security fallback", async () => {
