@@ -55,6 +55,12 @@ const endpointFromUrl = (
     }
     return buildEndpoint(contract, {
       q,
+      ...(u.searchParams.has("sort")
+        ? { sort: u.searchParams.get("sort")! }
+        : {}),
+      ...(u.searchParams.has("order")
+        ? { order: u.searchParams.get("order")! }
+        : {}),
       page: Number(u.searchParams.get("page") ?? 1),
       per_page: Number(u.searchParams.get("per_page") ?? 100),
     });
