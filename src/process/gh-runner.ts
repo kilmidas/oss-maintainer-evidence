@@ -99,20 +99,20 @@ export async function runGhApi(
   clearTimeout(timeout);
   if (timed) throw new GhApiError("timeout", safeMessage("timeout"));
   if (limited) throw new GhApiError("output", safeMessage("output"));
-  if (code !== 0) {
-    const text = err.toString().toLowerCase();
-    throw new GhApiError(
-      text.includes("rate limit")
+  const framing = out.toString();
+  const split = framing.indexOf("\r\n\r\n");
+  if (split < 0) {
+    if (code !== 0) {
+      const text = err.toString().toLowerCase();
+      const category: GhErrorCategory = text.includes("rate limit")
         ? "rate_limit"
         : text.includes("auth") || text.includes("login")
           ? "auth"
-          : "exit",
-      safeMessage("exit"),
-    );
+          : "exit";
+      throw new GhApiError(category, safeMessage(category));
+    }
+    throw new GhApiError("protocol", safeMessage("protocol"));
   }
-  const framing = out.toString();
-  const split = framing.indexOf("\r\n\r\n");
-  if (split < 0) throw new GhApiError("protocol", safeMessage("protocol"));
   const lines = framing.slice(0, split).split(/\r\n/);
   const m = lines[0].match(/^HTTP\/\d(?:\.\d)?\s+(\d{3})\b/i);
   if (!m) throw new GhApiError("protocol", safeMessage("protocol"));
@@ -126,6 +126,17 @@ export async function runGhApi(
   }
   const status = Number(m[1]);
   const bodyText = framing.slice(split + 4).trim();
+  if (
+    (status === 404 && endpoint.contract.absence === "404") ||
+    (status === 204 && endpoint.contract.absence === "204")
+  )
+    return { status, headers, body: undefined, link, absent: true };
+  if (status === 401 || status === 403)
+    throw new GhApiError("auth", safeMessage("auth"));
+  if (status === 429)
+    throw new GhApiError("rate_limit", safeMessage("rate_limit"));
+  if (code !== 0 || status >= 400)
+    throw new GhApiError("exit", safeMessage("exit"));
   if (status === 204)
     return { status, headers, body: undefined, link, absent: true };
   let body: unknown;
@@ -134,9 +145,5 @@ export async function runGhApi(
   } catch {
     throw new GhApiError("json", safeMessage("json"));
   }
-  if (status === 401 || status === 403)
-    throw new GhApiError("auth", safeMessage("auth"));
-  if (status === 429)
-    throw new GhApiError("rate_limit", safeMessage("rate_limit"));
   return { status, headers, body, ...(link ? { link } : {}) };
 }

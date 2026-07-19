@@ -1,12 +1,11 @@
 import { GhApiError, runGhApi } from "../process/gh-runner.js";
-import type { BuiltEndpoint } from "./contracts.js";
+import type { BuiltEndpoint, EndpointContract } from "./contracts.js";
 import { buildEndpoint, ENDPOINTS } from "./endpoints.js";
 import { repositorySchema, searchSchema } from "./schemas.js";
 
+type GhResponse = Awaited<ReturnType<typeof runGhApi>>;
 export interface ClientOptions {
-  run?: (
-    endpoint: BuiltEndpoint,
-  ) => Promise<Awaited<ReturnType<typeof runGhApi>>>;
+  run?: (endpoint: BuiltEndpoint) => Promise<GhResponse>;
 }
 export interface PublicRepository {
   owner: string;
@@ -20,84 +19,87 @@ export interface PageResult<T> {
   fetched: number;
   truncated: boolean;
 }
+
 const nextUrl = (link?: string) =>
   link
     ?.split(",")
-    .map((x) => x.trim())
-    .find((x) => /;\s*rel="?next"?/i.test(x))
+    .map((value) => value.trim())
+    .find((value) => /;\s*rel="?next"?/i.test(value))
     ?.match(/<([^>]+)>/)?.[1];
+
+const protocolError = () => new GhApiError("protocol");
+
 const endpointFromUrl = (
-  url: string,
-  contract: typeof ENDPOINTS.releases | typeof ENDPOINTS.searchIssues,
-  expected?: Record<string, string | number>,
+  value: string,
+  contract: EndpointContract,
+  expected: Record<string, string | number>,
 ): BuiltEndpoint => {
-  if (/^https:\/\/[^/]*:\d+(?:\/|$)/i.test(url))
-    throw new GhApiError("protocol");
-  const u = new URL(url);
-  const pageValue = u.searchParams.get("page");
-  const perPageValue = u.searchParams.get("per_page");
-  const page =
-    pageValue === null || /^[1-9]\d*$/.test(pageValue)
-      ? Number(pageValue ?? 1)
-      : NaN;
-  const perPage = perPageValue === null || perPageValue === "100" ? 100 : NaN;
-  if (!Number.isSafeInteger(page) || page < 1 || perPage !== 100)
-    throw new GhApiError("protocol");
-  if (
-    u.protocol !== "https:" ||
-    u.hostname !== "github.com" ||
-    u.port ||
-    u.username ||
-    u.password
-  )
-    throw new GhApiError("protocol");
-  if (contract === ENDPOINTS.searchIssues) {
-    if (u.pathname !== "/search/issues") throw new GhApiError("protocol");
-    const q = u.searchParams.get("q");
-    const sort = u.searchParams.get("sort");
-    const order = u.searchParams.get("order");
-    if (!q) throw new GhApiError("protocol");
-    for (const key of ["q", "sort", "order"]) {
-      if (
-        expected?.[key] !== undefined &&
-        u.searchParams.get(key) !== String(expected[key])
-      )
-        throw new GhApiError("protocol");
-    }
-    return buildEndpoint(contract, {
-      q,
-      ...(sort ? { sort } : {}),
-      ...(order ? { order } : {}),
-      page,
-      per_page: perPage,
-    });
-  }
-  const m = u.pathname.match(/^\/repos\/([^/]+)\/([^/]+)\/releases$/);
-  if (!m) throw new GhApiError("protocol");
-  let owner: string, repo: string;
+  if (/^https:\/\/[^/]*:\d+(?:\/|$)/i.test(value)) throw protocolError();
+  let url: URL;
   try {
-    owner = decodeURIComponent(m[1]);
-    repo = decodeURIComponent(m[2]);
+    url = new URL(value);
   } catch {
-    throw new GhApiError("protocol");
+    throw protocolError();
   }
-  return buildEndpoint(contract, {
-    owner,
-    repo,
-    page,
-    per_page: perPage,
-  });
+  if (
+    url.protocol !== "https:" ||
+    !["api.github.com", "github.com"].includes(url.hostname) ||
+    url.port ||
+    url.username ||
+    url.password ||
+    url.hash ||
+    contract.pagination !== "page"
+  )
+    throw protocolError();
+  const allowed = new Set(contract.queryKeys);
+  for (const key of url.searchParams.keys())
+    if (!allowed.has(key) || url.searchParams.getAll(key).length !== 1)
+      throw protocolError();
+  const pageText = url.searchParams.get("page");
+  if (pageText === null || !/^[1-9]\d*$/.test(pageText)) throw protocolError();
+  const page = Number(pageText);
+  if (!Number.isSafeInteger(page) || page < 2) throw protocolError();
+  if (url.searchParams.get("per_page") !== "100") throw protocolError();
+  for (const key of contract.queryKeys) {
+    if (key === "page" || key === "per_page") continue;
+    const actual = url.searchParams.get(key);
+    const wanted = expected[key];
+    if (
+      (wanted === undefined && actual !== null) ||
+      (wanted !== undefined && actual !== String(wanted))
+    )
+      throw protocolError();
+  }
+  let first: BuiltEndpoint;
+  try {
+    first = buildEndpoint(contract, { ...expected, page: 1, per_page: 100 });
+  } catch {
+    throw protocolError();
+  }
+  if (url.pathname !== first.path.split("?")[0]) throw protocolError();
+  try {
+    return buildEndpoint(contract, { ...expected, page, per_page: 100 });
+  } catch {
+    throw protocolError();
+  }
 };
+
 export class GithubClient {
   private readonly run: NonNullable<ClientOptions["run"]>;
   constructor(options: ClientOptions = {}) {
     this.run = options.run ?? runGhApi;
   }
+
+  async request(
+    contract: EndpointContract,
+    params: Record<string, string | number>,
+  ): Promise<GhResponse> {
+    return this.run(buildEndpoint(contract, params));
+  }
+
   async preflight(owner: string, repo: string): Promise<PublicRepository> {
-    const response = await this.run(
-      buildEndpoint(ENDPOINTS.repository, { owner, repo }),
-    );
-    if (response.status !== 200) throw new GhApiError("protocol");
+    const response = await this.request(ENDPOINTS.repository, { owner, repo });
+    if (response.status !== 200) throw protocolError();
     const parsed = repositorySchema.safeParse(response.body);
     if (
       !parsed.success ||
@@ -108,7 +110,7 @@ export class GithubClient {
       parsed.data.html_url.toLowerCase() !==
         `https://github.com/${owner}/${repo}`.toLowerCase()
     )
-      throw new GhApiError("protocol");
+      throw protocolError();
     return {
       owner,
       repo,
@@ -117,12 +119,14 @@ export class GithubClient {
       fork: parsed.data.fork ?? false,
     };
   }
+
   async paginate<T>(
-    contract: typeof ENDPOINTS.releases | typeof ENDPOINTS.searchIssues,
+    contract: EndpointContract,
     params: Record<string, string | number>,
     maxItems: number,
     parse: (body: unknown) => T[],
   ): Promise<PageResult<T>> {
+    if (contract.pagination !== "page") throw protocolError();
     const items: T[] = [];
     let endpoint = buildEndpoint(contract, {
       ...params,
@@ -144,25 +148,25 @@ export class GithubClient {
         truncated = Boolean(next || page.length > remaining);
         break;
       }
-      if (!next) break;
-      if (!nextEndpoint) throw new GhApiError("protocol");
+      if (!nextEndpoint) break;
       endpoint = nextEndpoint;
     }
     return { items, fetched: items.length, truncated };
   }
-  async searchIssues(
-    owner: string,
-    repo: string,
+
+  async search(
+    query: string,
     maxItems: number,
+    options: { sort?: string; order?: string } = {},
   ): Promise<PageResult<unknown>> {
     let partial = false;
     const result = await this.paginate(
       ENDPOINTS.searchIssues,
-      { q: `repo:${owner}/${repo}` },
+      { q: query, ...options },
       maxItems,
       (body) => {
         const parsed = searchSchema.safeParse(body);
-        if (!parsed.success) throw new GhApiError("protocol");
+        if (!parsed.success) throw protocolError();
         partial ||=
           parsed.data.incomplete_results ||
           parsed.data.total_count > 1000 ||
@@ -171,5 +175,13 @@ export class GithubClient {
       },
     );
     return { ...result, truncated: result.truncated || partial };
+  }
+
+  async searchIssues(
+    owner: string,
+    repo: string,
+    maxItems: number,
+  ): Promise<PageResult<unknown>> {
+    return this.search(`repo:${owner}/${repo}`, maxItems);
   }
 }

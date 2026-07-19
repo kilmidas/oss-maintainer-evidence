@@ -19,10 +19,11 @@ const NOW = new Date("2026-07-19T12:34:56.789Z");
 const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const cliPath = resolve(projectRoot, "dist/cli.js");
 
-function runCli(args: readonly string[]) {
+function runCli(args: readonly string[], env: NodeJS.ProcessEnv = process.env) {
   return spawnSync(process.execPath, [cliPath, ...args], {
     cwd: projectRoot,
     encoding: "utf8",
+    env,
   });
 }
 
@@ -450,25 +451,31 @@ test("input accepts safe output paths and rejects empty or control-bearing paths
   }
 });
 
-test("CLI returns the typed required-collection failure after valid parsing", () => {
-  const result = runCli([
-    "collect",
-    "OpenAI/Codex",
-    "--maintainer",
-    "octocat",
-    "--since",
-    "90d",
-    "--format",
-    "json",
-    "--output",
-    "reports/evidence.json",
-    "--max-items",
-    "1000",
-  ]);
+test("CLI returns a typed required-collection failure when gh is unavailable", () => {
+  const result = runCli(
+    [
+      "collect",
+      "OpenAI/Codex",
+      "--maintainer",
+      "octocat",
+      "--since",
+      "90d",
+      "--format",
+      "json",
+      "--output",
+      "reports/evidence.json",
+      "--max-items",
+      "1000",
+    ],
+    { ...process.env, PATH: "" },
+  );
 
   assert.equal(result.status, 3);
   assert.equal(result.stdout, "");
-  assert.equal(result.stderr, "Collection is not available in this build.\n");
+  assert.equal(
+    result.stderr,
+    "Required public GitHub evidence could not be collected.\n",
+  );
 });
 
 test("CLI reports invalid input as one sanitized line with exit 2", () => {

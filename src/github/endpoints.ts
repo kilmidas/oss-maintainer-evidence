@@ -56,6 +56,14 @@ export const ENDPOINTS = {
     activity: "required",
     queryKeys: ["page", "per_page"],
   },
+  repositoryIssueComments: {
+    key: "repositoryIssueComments",
+    template: "/repos/{owner}/{repo}/issues/comments",
+    pagination: "page",
+    absence: "404",
+    activity: "required",
+    queryKeys: ["since", "sort", "direction", "page", "per_page"],
+  },
   communityProfile: {
     key: "communityProfile",
     template: "/repos/{owner}/{repo}/community/profile",

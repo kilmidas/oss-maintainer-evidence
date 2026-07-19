@@ -36,7 +36,7 @@ test("pagination stops at max items and follows only next links", async () => {
         body: [1, 2, 3],
         link:
           calls === 1
-            ? '<https://github.com/repos/acme/demo/releases?page=2>; rel="next"'
+            ? '<https://api.github.com/repos/acme/demo/releases?page=2&per_page=100>; rel="next"'
             : undefined,
       };
     },
@@ -64,10 +64,10 @@ test("pagination stops at max items and follows only next links", async () => {
 
 test("rejects non-canonical or wrong-family pagination links", async () => {
   for (const link of [
-    '<ftp://github.com/repos/acme/demo/releases?page=2>; rel="next"',
-    '<https://user:pass@github.com/repos/acme/demo/releases?page=2>; rel="next"',
-    '<https://github.com:443/repos/acme/demo/releases?page=2>; rel="next"',
-    '<https://github.com/repos/acme/demo/issues?page=2>; rel="next"',
+    '<ftp://github.com/repos/acme/demo/releases?page=2&per_page=100>; rel="next"',
+    '<https://user:pass@github.com/repos/acme/demo/releases?page=2&per_page=100>; rel="next"',
+    '<https://github.com:443/repos/acme/demo/releases?page=2&per_page=100>; rel="next"',
+    '<https://github.com/repos/acme/demo/issues?page=2&per_page=100>; rel="next"',
   ]) {
     const client = new GithubClient({
       run: async () => ({ status: 200, headers: {}, body: [1], link }),

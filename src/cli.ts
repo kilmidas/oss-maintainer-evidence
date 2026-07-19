@@ -2,11 +2,16 @@
 
 import { getVersion } from "./version.js";
 
-const HELP_TEXT =
-  "Usage: oss-evidence collect owner/repository --maintainer username\n\n" +
-  "Options:\n" +
-  "  --help     Show command help\n" +
-  "  --version  Show the package version\n";
+const HELP_TEXT = `Usage: oss-evidence collect owner/repository --maintainer username
+
+Options:
+  --since <90d|ISO_TIMESTAMP>  Inclusive reporting-window start (default: 90d)
+  --format <markdown|json>     Output format (default: markdown)
+  --output <PATH>              Create a new output file instead of stdout
+  --max-items <1..1000>        Maximum items per paginated resource (default: 200)
+  --help                       Show command help
+  --version                    Show the package version
+`;
 
 function reportPackageMetadataFailure(): void {
   process.stderr.write(
@@ -20,81 +25,70 @@ function reportCollectionStartupFailure(): void {
   process.exitCode = 1;
 }
 
-function isErrorConstructor(value: unknown): boolean {
-  return typeof value === "function" && value.prototype instanceof Error;
-}
-
-function hasExitCode(value: unknown, expected: number): boolean {
-  if (!isErrorConstructor(value)) {
-    return false;
-  }
-
-  try {
-    const error = new (
-      value as new (
-        ...args: unknown[]
-      ) => Error & {
-        exitCode?: unknown;
-      }
-    )("Collection startup validation", null);
-    return error.exitCode === expected;
-  } catch {
-    return false;
-  }
+function isFunction(value: unknown): value is (...args: never[]) => unknown {
+  return typeof value === "function";
 }
 
 async function runCollect(args: readonly string[]): Promise<void> {
-  let collectionModules: [
+  let modules: [
     typeof import("./domain/input.js"),
     typeof import("./errors.js"),
+    typeof import("./app/runtime.js"),
+    typeof import("./render/markdown.js"),
+    typeof import("./render/json.js"),
+    typeof import("./io/output.js"),
   ];
-
   try {
-    const modules = await Promise.all([
+    modules = await Promise.all([
       import("./domain/input.js"),
       import("./errors.js"),
+      import("./app/runtime.js"),
+      import("./render/markdown.js"),
+      import("./render/json.js"),
+      import("./io/output.js"),
     ]);
-    const [inputModule, errorModule] = modules;
     if (
-      typeof inputModule.parseCollectInput !== "function" ||
-      !isErrorConstructor(errorModule.InputError) ||
-      !isErrorConstructor(errorModule.OperationalError) ||
-      !isErrorConstructor(errorModule.RequiredCollectionError) ||
-      !hasExitCode(errorModule.InputError, 2) ||
-      !hasExitCode(errorModule.OutOfScopeError, 2) ||
-      !hasExitCode(errorModule.RequiredCollectionError, 3) ||
-      !hasExitCode(errorModule.PartialCollectionError, 4) ||
-      !hasExitCode(errorModule.OutputWriteError, 5) ||
-      typeof errorModule.sanitizeErrorMessage !== "function"
-    ) {
-      throw new Error("Invalid collection module exports.");
-    }
-    collectionModules = modules;
+      !isFunction(modules[0].parseCollectInput) ||
+      !isFunction(modules[2].runCollection) ||
+      !isFunction(modules[3].renderMarkdown) ||
+      !isFunction(modules[4].renderJson) ||
+      !isFunction(modules[5].writeOutput) ||
+      !isFunction(modules[1].sanitizeErrorMessage)
+    )
+      throw new Error("invalid runtime modules");
   } catch {
     reportCollectionStartupFailure();
     return;
   }
 
-  const [{ parseCollectInput }, errorModule] = collectionModules;
-  const {
-    InputError,
-    OperationalError,
-    RequiredCollectionError,
-    sanitizeErrorMessage,
-  } = errorModule;
-
+  const [inputModule, errorModule, runtime, markdown, json, output] = modules;
   try {
-    parseCollectInput(args, new Date());
-    throw new RequiredCollectionError(
-      "Collection is not available in this build.",
-    );
+    const input = inputModule.parseCollectInput(args, new Date());
+    const report = await runtime.runCollection(input);
+    const rendered =
+      input.format === "json"
+        ? json.renderJson(report)
+        : markdown.renderMarkdown(report);
+    await output.writeOutput(rendered, input.output);
+    if (report.status === "partial") {
+      const partial = new errorModule.PartialCollectionError(
+        "Report generated with partial public GitHub evidence.",
+        report,
+      );
+      process.stderr.write(`${partial.message}\n`);
+      process.exitCode = partial.exitCode;
+    }
   } catch (error) {
-    const operationalError =
-      error instanceof OperationalError
+    const operational =
+      error instanceof errorModule.OperationalError
         ? error
-        : new InputError("Invalid command input.");
-    process.stderr.write(`${sanitizeErrorMessage(operationalError.message)}\n`);
-    process.exitCode = operationalError.exitCode;
+        : new errorModule.RequiredCollectionError(
+            "Required public GitHub evidence could not be collected.",
+          );
+    process.stderr.write(
+      `${errorModule.sanitizeErrorMessage(operational.message)}\n`,
+    );
+    process.exitCode = operational.exitCode;
   }
 }
 
@@ -103,17 +97,12 @@ async function main(): Promise<void> {
   if (args.length === 1 && args[0] === "--help") {
     process.stdout.write(HELP_TEXT);
   } else if (args.length === 1 && args[0] === "--version") {
-    let version: string;
     try {
-      version = getVersion();
+      process.stdout.write(`${getVersion()}\n`);
     } catch {
       reportPackageMetadataFailure();
-      return;
     }
-    process.stdout.write(`${version}\n`);
-  } else {
-    await runCollect(args);
-  }
+  } else await runCollect(args);
 }
 
 await main().catch(reportCollectionStartupFailure);

@@ -26,6 +26,7 @@ test("registry covers all planned route contracts", () => {
     pullReviews: ["page", "404", "required"],
     issue: ["none", "404", "required"],
     issueComments: ["page", "404", "required"],
+    repositoryIssueComments: ["page", "404", "required"],
     communityProfile: ["none", "404", "optional"],
     contents: ["none", "404", "optional"],
     contributors: ["page", "404", "optional"],
