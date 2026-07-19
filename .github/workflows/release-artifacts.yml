@@ -1,0 +1,59 @@
+name: Release Artifacts
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build and attest release archive
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    steps:
+      - name: Check out tag
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+          package-manager-cache: false
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Verify source
+        run: npm run check
+      - name: Verify dependency licenses
+        run: npm run license:check
+      - name: Verify tag matches package version
+        run: |
+          PACKAGE_VERSION=$(npm pkg get version | tr -d '"')
+          test "v${PACKAGE_VERSION}" = "${GITHUB_REF_NAME}"
+      - name: Build package archive
+        run: npm pack --ignore-scripts
+      - name: Create SHA-256 checksum
+        run: |
+          CHECKSUM="oss-evidence-${GITHUB_REF_NAME#v}.tgz.sha256"
+          shasum -a 256 oss-evidence-*.tgz > "$CHECKSUM"
+      - name: Attest package archive
+        uses: actions/attest-build-provenance@v4
+        with:
+          subject-path: oss-evidence-*.tgz
+      - name: Upload package and checksum
+        uses: actions/upload-artifact@v7
+        with:
+          name: oss-evidence-${{ github.ref_name }}
+          path: |
+            oss-evidence-*.tgz
+            oss-evidence-*.tgz.sha256
+          if-no-files-found: error
+          retention-days: 30

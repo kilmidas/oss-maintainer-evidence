@@ -32,6 +32,8 @@
     "lint": "biome lint .",
     "schema": "npm run build && node scripts/generate-schema.mjs",
     "schema:check": "tmpdir=$(mktemp -d) && npm run build >/dev/null && node scripts/generate-schema.mjs \"$tmpdir/report-v1.json\" && cmp -s schema/report-v1.json \"$tmpdir/report-v1.json\"; code=$?; rm -rf \"$tmpdir\"; exit $code",
+    "license:check": "node scripts/check-licenses.mjs",
+    "package:verify": "node scripts/verify-package.mjs",
     "check": "biome check . && npm run typecheck && npm test",
     "prepack": "npm run check"
   },
