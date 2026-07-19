@@ -138,5 +138,5 @@ export function buildEndpoint(
     !path.startsWith("/search/issues?")
   )
     throw new Error("invalid route");
-  return { path, contract };
+  return { path, contract, __brand: "BuiltEndpoint" };
 }

@@ -12,4 +12,5 @@ export interface EndpointContract<K extends string = string> {
 export interface BuiltEndpoint {
   readonly path: string;
   readonly contract: EndpointContract;
+  readonly __brand: "BuiltEndpoint";
 }

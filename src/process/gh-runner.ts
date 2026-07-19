@@ -1,6 +1,7 @@
 import type { ChildProcess } from "node:child_process";
 import { spawn as nodeSpawn } from "node:child_process";
 import type { BuiltEndpoint } from "../github/contracts.js";
+import { ENDPOINTS } from "../github/endpoints.js";
 export const MAX_OUTPUT_BYTES = 8 * 1024 * 1024;
 export const DEFAULT_TIMEOUT_MS = 30_000;
 const ARGS = [
@@ -42,7 +43,7 @@ function safeMessage(category: GhErrorCategory): string {
   return `GitHub request failed (${category})`;
 }
 export async function runGhApi(
-  endpoint: BuiltEndpoint | string,
+  endpoint: BuiltEndpoint,
   opts: { spawn?: Spawn; timeoutMs?: number } = {},
 ): Promise<{
   status: number;
@@ -51,15 +52,12 @@ export async function runGhApi(
   link?: string;
   absent?: boolean;
 }> {
-  const path = typeof endpoint === "string" ? endpoint : endpoint.path;
   if (
-    typeof endpoint === "string" &&
-    !/^\/repos\/[A-Za-z0-9][A-Za-z0-9_.-]{0,99}\/[A-Za-z0-9][A-Za-z0-9_.-]{0,99}(?:\/(?:releases|pulls\/[0-9]+(?:\/reviews)?|issues\/[0-9]+(?:\/comments)?|community\/profile|contributors|contents\/[A-Za-z0-9_.-]+(?:\/[A-Za-z0-9_.-]+)*))?(?:\?[^#]+)?$/.test(
-      path,
-    ) &&
-    !/^\/search\/issues\?[^#]+$/.test(path)
+    endpoint?.__brand !== "BuiltEndpoint" ||
+    !Object.values(ENDPOINTS).includes(endpoint.contract as never)
   )
     throw new GhApiError("protocol");
+  const path = endpoint.path;
   const spawn = opts.spawn ?? (nodeSpawn as unknown as Spawn);
   let child: ChildProcess;
   try {

@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import type { ChildProcess } from "node:child_process";
 import { EventEmitter } from "node:events";
 import test from "node:test";
+import { buildEndpoint, ENDPOINTS } from "../src/github/endpoints.js";
 import { GhApiError, runGhApi } from "../src/process/gh-runner.js";
 
 type RunOptions = NonNullable<Parameters<typeof runGhApi>[1]>;
@@ -24,7 +25,11 @@ function mockSpawn(payload: string, seen?: unknown[]): Spawn {
 
 test("uses fixed safe gh command boundary", async () => {
   const seen: unknown[] = [];
-  const result = await runGhApi("/repos/octo/hello", {
+  const endpoint = buildEndpoint(ENDPOINTS.repository, {
+    owner: "octo",
+    repo: "hello",
+  });
+  const result = await runGhApi(endpoint, {
     spawn: mockSpawn(
       'HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n{"ok":true}',
       seen,
@@ -50,7 +55,10 @@ test("uses fixed safe gh command boundary", async () => {
 
 test("maps malformed response safely", async () => {
   await assert.rejects(
-    runGhApi("/repos/octo/hello", { spawn: mockSpawn("not headers") }),
+    runGhApi(
+      buildEndpoint(ENDPOINTS.repository, { owner: "octo", repo: "hello" }),
+      { spawn: mockSpawn("not headers") },
+    ),
     (error: unknown) =>
       error instanceof GhApiError && error.category === "protocol",
   );
