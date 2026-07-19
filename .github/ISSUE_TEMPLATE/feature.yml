@@ -1,0 +1,40 @@
+name: Feature request
+description: Propose a focused improvement within the public-data scope
+title: "[Feature]: "
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Explain the user problem before proposing an interface. Requests must use public or synthetic examples.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What evidence or workflow is currently difficult?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior
+      description: Describe the smallest useful behavior and its public source data.
+    validations:
+      required: true
+  - type: textarea
+    id: attribution
+    attributes:
+      label: Attribution and limitations
+      description: How can actor, timestamp, and URL be verified without inference?
+    validations:
+      required: true
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Scope
+      options:
+        - label: The example contains only public or synthetic data.
+          required: true
+        - label: The proposal does not require GitHub mutations or token access.
+          required: true

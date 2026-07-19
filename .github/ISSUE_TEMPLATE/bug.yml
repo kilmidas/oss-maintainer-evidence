@@ -1,0 +1,54 @@
+name: Bug report
+description: Report reproducible behavior using public or synthetic data
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for reporting a bug. Do not include tokens, private repository data, email addresses, or application correspondence.
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Output of `oss-evidence --version`.
+      placeholder: 0.1.0
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: Node.js, operating system, and GitHub CLI versions.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Public reproduction
+      description: Use a public repository or synthetic placeholders and remove credentials.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: Include the exit code and sanitized error text, but no token or private report.
+    validations:
+      required: true
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Data safety
+      options:
+        - label: I removed credentials and all non-public data.
+          required: true
+        - label: This is not an exploitable vulnerability.
+          required: true

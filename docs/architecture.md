@@ -1,0 +1,32 @@
+# Architecture
+
+OSS Maintainer Evidence is a local Node.js CLI with explicit boundaries between untrusted input, GitHub responses, domain logic, and rendered output.
+
+## Flow
+
+1. The CLI parses a bounded repository name, maintainer, reporting window, format, output path, and item cap.
+2. The runtime creates a GitHub client backed by a fixed `gh api --method GET --hostname github.com` process boundary.
+3. Public-repository preflight runs before activity endpoints. Private, internal, missing, fork, and noncanonical repository targets fail closed.
+4. Typed endpoint contracts build every path and query. Pagination follows only validated next links that remain in the same endpoint family.
+5. Collectors validate responses, apply the rules in [attribution.md](attribution.md), and return activities plus limitations.
+6. The application assembles and validates the report. Required collection failures produce no report; optional gaps produce a valid partial report.
+7. A deterministic Markdown or JSON renderer completes before stdout or a new atomic output file is written.
+
+## Trust boundaries
+
+- Command arguments are data, never shell syntax.
+- The child process receives an argument array with `shell: false` and a bounded response size and timeout.
+- The application does not read or print token values. GitHub CLI owns authentication.
+- All GitHub payloads and public URLs are validated before they enter the report.
+- File output uses an exclusive temporary sibling and never replaces an existing path.
+
+## Components
+
+- `src/domain`: input and report schemas, aggregation, and stable types.
+- `src/github`: endpoint registry, response schemas, pagination, and collectors.
+- `src/process`: the isolated GitHub CLI adapter.
+- `src/app`: dependency construction and collection orchestration.
+- `src/render`: deterministic Markdown and JSON output.
+- `src/io`: stdout and safe file creation.
+
+The project intentionally has no AI API dependency and no GitHub mutation client.
