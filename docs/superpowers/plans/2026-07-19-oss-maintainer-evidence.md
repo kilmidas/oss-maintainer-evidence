@@ -68,7 +68,7 @@ Expected: a lockfile with only the declared direct dependencies and platform pac
 
 - [ ] **Step 3: Implement only help and version entry points**
 
-Add the Node shebang to `src/cli.ts`. Use `parseArgs` only to recognize `--help` and `--version`; all unsupported invocations must still fail with exit `2`. Treat root `package.json` as the single version source: `src/version.ts` reads the package file relative to the installed `dist` module with `node:fs`, validates the expected package name and semantic version, and returns that value. Tests must prove `--version`, archive name, changelog heading, and release tag expectations all derive from `0.1.0` rather than duplicate mutable constants.
+Add the Node shebang to `src/cli.ts`. Use `parseArgs` only to recognize `--help` and `--version`; all unsupported invocations must still fail with exit `2`. Treat root `package.json` as the single version source: `src/version.ts` reads the package file relative to the installed `dist` module with `node:fs`, validates the expected package name and semantic version, and returns that value. Task 1 tests must prove `--version` and the expected archive name derive from package metadata rather than duplicate mutable constants.
 
 Run: `npm test`  
 Expected: the help test passes.
@@ -491,7 +491,7 @@ git commit -m "feat: complete CLI collection workflow"
 
 - [ ] **Step 1: Add failing documentation contract tests**
 
-Check that every required community file exists, README code samples match current help output, all local Markdown links resolve, security contact is a safe public GitHub reporting path, and forbidden claims such as guaranteed program acceptance or private-repository support are absent.
+Check that every required community file exists, README code samples match current help output, the top release heading in `CHANGELOG.md` matches the package version, all local Markdown links resolve, security contact is a safe public GitHub reporting path, and forbidden claims such as guaranteed program acceptance or private-repository support are absent.
 
 Run: `npm test -- --test-name-pattern="documentation"`  
 Expected: failure because public documentation does not exist.
@@ -654,7 +654,7 @@ Create a detached temporary worktree at the frozen commit. Inside it run `npm ci
 
 - [ ] **Step 1: Verify recorded owner authorization and release target**
 
-Confirm the current authenticated account is `kilmidas`, the target is `kilmidas/oss-maintainer-evidence`, the release is public `v0.1.0`, and the frozen commit is still remote `main`. The current owner directive authorizes this GitHub release. Do not publish to npm or any unrelated registry.
+Confirm the current authenticated account is `kilmidas`, the target is `kilmidas/oss-maintainer-evidence`, the release tag equals `v` plus the exact package version (`v0.1.0`), and the frozen commit is still remote `main`. The current owner directive authorizes this GitHub release. Do not publish to npm or any unrelated registry.
 
 - [ ] **Step 2: Tag the frozen commit and obtain the attested artifact**
 
