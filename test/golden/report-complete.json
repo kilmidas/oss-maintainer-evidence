@@ -1,0 +1,86 @@
+{
+  "schemaVersion": "1.0",
+  "generatedAt": "2025-01-01T00:00:00.000Z",
+  "status": "complete",
+  "query": {
+    "repository": {
+      "owner": "acme",
+      "name": "demo",
+      "fullName": "acme/demo"
+    },
+    "maintainer": "Alice",
+    "since": "2024-01-01T00:00:00.000Z",
+    "until": "2025-01-01T00:00:00.000Z",
+    "maxItems": 20
+  },
+  "repository": {
+    "owner": "acme",
+    "name": "demo",
+    "fullName": "acme/demo",
+    "description": null,
+    "sourceUrl": "https://github.com/acme/demo",
+    "observedAt": "2025-01-01T00:00:00.000Z"
+  },
+  "activities": {
+    "releases": [],
+    "authoredPullRequests": [],
+    "mergedPullRequests": [],
+    "reviews": [],
+    "openedIssues": [],
+    "closedIssues": [],
+    "issueComments": []
+  },
+  "summary": {
+    "releases": 0,
+    "authoredPullRequests": 0,
+    "mergedPullRequests": 0,
+    "reviews": 0,
+    "openedIssues": 0,
+    "closedIssues": 0,
+    "issueComments": 0,
+    "total": 0
+  },
+  "community": {},
+  "adoption": {
+    "stars": null,
+    "forks": null,
+    "watchers": null,
+    "contributors": null,
+    "observedAt": "2025-01-01T00:00:00.000Z"
+  },
+  "pagination": {
+    "releases": {
+      "fetched": 0,
+      "truncated": false
+    },
+    "authoredPullRequests": {
+      "fetched": 0,
+      "truncated": false
+    },
+    "mergedPullRequests": {
+      "fetched": 0,
+      "truncated": false
+    },
+    "reviews": {
+      "fetched": 0,
+      "truncated": false
+    },
+    "openedIssues": {
+      "fetched": 0,
+      "truncated": false
+    },
+    "closedIssues": {
+      "fetched": 0,
+      "truncated": false
+    },
+    "issueComments": {
+      "fetched": 0,
+      "truncated": false
+    },
+    "contributors": {
+      "fetched": 0,
+      "truncated": false
+    }
+  },
+  "limitations": []
+}
