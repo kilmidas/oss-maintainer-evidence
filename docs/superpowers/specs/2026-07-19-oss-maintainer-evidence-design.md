@@ -1,6 +1,6 @@
 # OSS Maintainer Evidence Design
 
-**Status:** Approved direction, pending written-spec review  
+**Status:** Independent review approved, pending owner review  
 **Date:** 2026-07-19  
 **Working repository name:** `oss-maintainer-evidence`  
 **CLI name:** `oss-evidence`
