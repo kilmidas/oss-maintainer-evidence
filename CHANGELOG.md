@@ -2,6 +2,19 @@
 
 All notable changes to this project are documented in this file. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] - 2026-07-20
+
+### Added
+
+- `oss-evidence verify <report.json>` validates schema-version 1.0 reports and checks every source-linked public GitHub URL without credentials or cookies.
+- Verification uses bounded file input, target count, concurrency, redirects, and request timeouts with deterministic per-link results.
+- Unsafe redirects, unavailable links, transport failures, and timeouts produce fixed safe reason codes and exit `6` without exposing response bodies or error details.
+
+### Documentation
+
+- Added source-linked ecosystem importance context with a strict offline-validated evidence ledger.
+- Documented verification trust boundaries, limitations, and release checks.
+
 ## [0.1.0] - 2026-07-19
 
 ### Added
@@ -18,4 +31,5 @@ All notable changes to this project are documented in this file. The format foll
 - Package installation verification now works with a fresh npm cache while lifecycle scripts remain disabled.
 - Pull request and issue detail routes now accept positive safe numeric identifiers and reject invalid numeric values.
 
+[0.2.0]: https://github.com/kilmidas/oss-maintainer-evidence/releases/tag/v0.2.0
 [0.1.0]: https://github.com/kilmidas/oss-maintainer-evidence/releases/tag/v0.1.0

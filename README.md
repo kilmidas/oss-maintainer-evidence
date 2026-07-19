@@ -9,8 +9,9 @@ Read the [Ecosystem importance evidence](docs/ecosystem-importance.md) for the s
 ## Requirements
 
 - Node.js 22 or later
-- [GitHub CLI](https://cli.github.com/) authenticated to `github.com`
 - A public GitHub repository
+
+Collection also requires [GitHub CLI](https://cli.github.com/) authenticated to `github.com`. Verification does not require GitHub CLI authentication.
 
 Authenticate with GitHub CLI before collecting evidence:
 
@@ -28,11 +29,11 @@ The application invokes `gh api` with fixed, read-only `GET` requests. It never 
 Download the `.tgz` archive and matching `.sha256` file from [Releases](https://github.com/kilmidas/oss-maintainer-evidence/releases). Verify the checksum before installing:
 
 ```sh
-shasum -a 256 -c oss-evidence-0.1.0.tgz.sha256
-npm install --global ./oss-evidence-0.1.0.tgz
+shasum -a 256 -c oss-evidence-0.2.0.tgz.sha256
+npm install --global ./oss-evidence-0.2.0.tgz
 ```
 
-Release archives are distributed through GitHub Releases. Version `0.1.0` is not published to the npm registry.
+Release archives are distributed through GitHub Releases. Version `0.2.0` is not published to the npm registry.
 
 ### From source
 
@@ -42,13 +43,14 @@ cd oss-maintainer-evidence
 npm ci
 npm run check
 npm pack --ignore-scripts
-npm install --global ./oss-evidence-0.1.0.tgz
+npm install --global ./oss-evidence-0.2.0.tgz
 ```
 
 ## Usage
 
 ```text
 Usage: oss-evidence collect owner/repository --maintainer username
+       oss-evidence verify <report.json>
 
 Options:
   --since <90d|ISO_TIMESTAMP>  Inclusive reporting-window start (default: 90d)
@@ -76,6 +78,14 @@ oss-evidence collect owner/repository \
 ```
 
 An output path must not already exist. The command creates the file atomically and never overwrites an existing report.
+
+Verify every public GitHub evidence link in a schema-version 1.0 JSON report without GitHub credentials, cookies, GitHub CLI state, or a browser profile:
+
+```sh
+oss-evidence verify evidence.json
+```
+
+Verification revalidates the full report, reads at most 5 MiB, checks at most 2,000 unique HTTP targets with bounded concurrency and timeouts, and follows only canonical same-host redirects. It prints one deterministic `PASS` or `FAIL` line per evidence URL and never prints response bodies or arbitrary response headers.
 
 ## Report contents
 
@@ -109,18 +119,21 @@ The two files come from separate CLI invocations, so their observation timestamp
 | `3` | Required GitHub data could not be collected or validated | No |
 | `4` | Report is valid but partial | Yes |
 | `5` | Output could not be written safely | No |
+| `6` | One or more evidence links failed signed-out verification | Verification results |
 
 Treat exit `4` as a usable report that needs human review, not as an empty result.
 
 ## Public-data and privacy model
 
-Version `0.1.0` collects only public GitHub.com data. It rejects private, internal, missing, and unsupported repositories during preflight. Authentication improves supported API access and rate limits but does not expand the product scope.
+Version `0.2.0` collects only public GitHub.com data. It rejects private, internal, missing, and unsupported repositories during preflight. Authentication improves supported API access and rate limits but does not expand the product scope.
+
+The verifier uses native HTTP requests rather than GitHub CLI or a browser. It supplies no authorization or cookie header and rejects redirects outside canonical public GitHub.com URLs.
 
 Reports can contain public usernames, titles, timestamps, and URLs. Review a report before publishing it. Do not add private repository data, credentials, application correspondence, email addresses, or other non-public context to reports or fixtures.
 
 ## Architecture and safety
 
-The CLI validates bounded input, builds requests from an endpoint allowlist, invokes GitHub CLI without a shell, validates every response, applies transparent attribution rules, and renders only after required collection succeeds. Optional endpoint gaps and pagination caps are recorded as limitations. See [architecture](docs/architecture.md) for the component boundaries.
+The CLI validates bounded input, builds collection requests from an endpoint allowlist, invokes GitHub CLI without a shell, validates every response, applies transparent attribution rules, and renders only after required collection succeeds. Verification has a separate signed-out HTTP boundary with fixed headers, redirects, timeouts, and concurrency. Optional endpoint gaps and pagination caps are recorded as limitations. See [architecture](docs/architecture.md) for the component boundaries.
 
 The command has no GitHub mutation path, makes no AI API call, and does not infer activity from commit email, repository permission, labels, or title text.
 
@@ -131,7 +144,7 @@ The first release intentionally covers one public GitHub.com repository at a tim
 ## Roadmap
 
 - Publish a follow-up report after a justified maintenance release.
-- Add signed-out link verification for example evidence.
+- Add a machine-readable verification-result format after the text contract is stable.
 - Evaluate additional public providers only after the GitHub contract is stable.
 - Consider npm registry publication only after demand and publisher identity are established.
 

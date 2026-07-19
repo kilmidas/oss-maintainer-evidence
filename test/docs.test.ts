@@ -28,6 +28,7 @@ const requiredFiles = [
 ] as const;
 
 const expectedHelp = `Usage: oss-evidence collect owner/repository --maintainer username
+       oss-evidence verify <report.json>
 
 Options:
   --since <90d|ISO_TIMESTAMP>  Inclusive reporting-window start (default: 90d)
@@ -48,6 +49,20 @@ test("documentation README contains the exact current command help", () => {
     read("README.md"),
     new RegExp(`\\n${escapeRegex(expectedHelp)}\\n`),
   );
+});
+
+test("documentation describes the 0.2.0 signed-out verifier boundary", () => {
+  const packageMetadata = JSON.parse(read("package.json")) as {
+    version: string;
+    private: boolean;
+  };
+  const readme = read("README.md");
+  assert.equal(packageMetadata.version, "0.2.0");
+  assert.equal(packageMetadata.private, true);
+  assert.match(readme, /oss-evidence verify <report\.json>/);
+  assert.match(readme, /without (?:GitHub )?credentials/i);
+  assert.match(readme, /\| `6` \|[^\n]+verification/i);
+  assert.match(readme, /not published to the npm registry/i);
 });
 
 test("documentation changelog starts with the package version", () => {
