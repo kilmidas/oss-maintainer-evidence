@@ -6,6 +6,8 @@
 
 **Tech stack:** Node.js 22+, TypeScript, Zod, Node test runner, native `fetch`, GitHub Actions, GitHub CLI for explicitly approved repository writes.
 
+**Authorization boundary:** The user explicitly directed this task to continue through release and application submission without additional questions. That standing instruction is the human approval for the listed, exact-target writes. It does not authorize a different repository, force push, protection bypass, registry publication, fabricated evidence, or any broader action. Account, target, and artifact checks still occur immediately before every write.
+
 ---
 
 ## Task 1: Parse verification input and build a bounded plan
@@ -104,6 +106,8 @@
 6. Create the human-triggered `v0.2.0` release with the package archive and SHA-256 sidecar, then verify the release page and asset checksums signed out.
 
 ## Task 8: Refresh evidence and submit the application
+
+This is downstream operational follow-through after the repository feature and release are complete. It is not part of the product design or repository implementation.
 
 1. Collect and verify a post-release public report that includes v0.2.0 and its maintenance trail.
 2. Publish the refreshed report through a protected pull request if repository examples need updating.

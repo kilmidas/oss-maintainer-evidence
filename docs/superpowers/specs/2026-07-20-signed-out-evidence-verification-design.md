@@ -76,3 +76,5 @@ Live signed-out verification of the repository's checked-in example report is a 
 ## Release boundary
 
 The user-visible command is a backward-compatible feature, so the justified follow-up release is `0.2.0`. The release remains human-triggered, contains a checksum sidecar, and does not publish to the npm registry.
+
+Application preparation and submission are downstream operational work, not product behavior or repository content. They remain outside this feature's implementation boundary.
