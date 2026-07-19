@@ -16,8 +16,15 @@ export const escapeMarkdown = (value: string) =>
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
 
+const escapeDestination = (value: string) =>
+  value.replace(
+    /[\\()<>]/g,
+    (character) =>
+      `%${character.codePointAt(0)?.toString(16).toUpperCase().padStart(2, "0")}`,
+  );
+
 const link = (label: string, url: string) =>
-  `[${escapeMarkdown(label)}](${url})`;
+  `[${escapeMarkdown(label)}](${escapeDestination(url)})`;
 
 const activityLabels = {
   releases: "Releases",

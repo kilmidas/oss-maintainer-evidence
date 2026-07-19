@@ -153,6 +153,19 @@ test("renders a prominent partial warning and every limitation", () => {
   assert.match(output, /Release pages were capped/);
 });
 
+test("escapes Markdown destination metacharacters in validated source URLs", () => {
+  const value = report();
+  const activities = value.activities as unknown as Record<
+    string,
+    Array<Record<string, unknown>>
+  >;
+  activities.releases[0].url =
+    "https://github.com/acme/demo/releases/tag/v1)(unsafe";
+  const output = renderMarkdown(value);
+  assert.match(output, /v1%29%28unsafe\)/);
+  assert.doesNotMatch(output, /v1\)\(unsafe\)/);
+});
+
 test("renders deterministic two-space JSON with a final newline", () => {
   const output = renderJson(report());
   assert.equal(output, renderJson(report()));
