@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import releases from "./fixtures/releases.json" with { type: "json" };
 import { collectRepository } from "../src/github/collect-repository.js";
+import releases from "./fixtures/releases.json" with { type: "json" };
 
 test("collects case-insensitive published releases and adoption counters", async () => {
   const out = await collectRepository(
