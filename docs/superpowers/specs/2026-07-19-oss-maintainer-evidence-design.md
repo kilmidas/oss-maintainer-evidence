@@ -66,12 +66,12 @@ Configuration files are intentionally excluded from the first release. A small e
 
 The tool will collect only evidence available for a public repository on GitHub.com. GitHub CLI authentication is used for supported API access and rate limits, but it does not expand the product scope to private, internal, or enterprise repositories:
 
-- Repository facts: visibility, description, license, creation date, latest push, default branch, stars, forks, watchers, open issue count, and archived state.
-- Release work: releases authored by the maintainer within the reporting window, with source URLs and dates. A release-associated tag is shown as release metadata; standalone tags are not attributed to a maintainer.
+- Repository facts: visibility, description, license, creation date, latest push, default branch, `stargazers_count`, `forks_count`, `subscribers_count`, open issue count, and archived state.
+- Release work: public, published releases authored by the maintainer within the reporting window, with source URLs and dates. Draft releases are excluded. A release-associated tag is shown as release metadata; standalone tags are not attributed to a maintainer.
 - Pull request work: pull requests authored by the maintainer, pull requests merged by the maintainer, and submitted reviews authored by the maintainer within the reporting window.
 - Issue work: issues opened by the maintainer, issues closed by the maintainer, and issue comments authored by the maintainer within the reporting window. Label changes and other implied triage actions are not attributed in the first release.
 - Community health signals: presence of README, license, contributing guide, security policy, code of conduct, issue templates, and pull request template.
-- Adoption proxies: stars, forks, watchers, contributors visible through GitHub, and package links declared by the repository. Package download counts are excluded until a later release can support registries with clear provenance.
+- Adoption proxies: stars from `stargazers_count`, forks from `forks_count`, repository subscribers from `subscribers_count`, and contributors visible through GitHub. Package registry links and download counts are excluded from the first release because they require registry-specific provenance rules.
 
 GitHub APIs do not expose every kind of maintainer labor in a complete or uniform way. Missing review, triage, permission, or download data must be reported as unavailable, not treated as zero.
 
@@ -81,7 +81,7 @@ GitHub usernames are compared case-insensitively and preserved in their API-prov
 
 The first release uses only these attribution rules:
 
-- Release: `release.author.login` matches the maintainer; time is `published_at`, falling back to `created_at` only when the release is unpublished and the fallback is disclosed.
+- Release: `release.author.login` matches the maintainer, `draft` is `false`, and `published_at` is present and inside the reporting window. Unpublished and draft releases are excluded rather than reported from authenticated-only data.
 - Authored pull request: `pull.user.login` matches; time is `created_at`.
 - Merged pull request: `pull.merged_by.login` matches; time is `merged_at`. A pull request merely merged during the window is not maintainer evidence when another actor merged it.
 - Pull request review: `review.user.login` matches and the review has a submitted state; time is `submitted_at`.
@@ -139,6 +139,7 @@ The GitHub adapter and process executor will be dependency-injected so tests can
 - Repository names and usernames are untrusted input and must match conservative GitHub identifier patterns before being passed to another process.
 - Input accepts only `owner/name`, not arbitrary URLs or hostnames. All API calls are forced to `github.com`.
 - Before any activity endpoint is queried, repository metadata must report `private: false`, `visibility: public`, and a canonical GitHub.com URL. Private, internal, missing, and GitHub Enterprise repositories are rejected.
+- Authenticated-only draft release metadata is discarded, and every reported evidence URL must be a public GitHub.com URL that a signed-out reader can open.
 - `gh` is executed directly with an argument array. Shell interpolation is prohibited.
 - GitHub response text is untrusted. Renderers must escape Markdown control sequences where needed and must never execute repository content.
 - The CLI uses read endpoints only. A test will fail if the adapter introduces non-read HTTP methods.
@@ -162,6 +163,7 @@ An expected absence, such as a repository having no security policy, is a collec
 - Argument and identifier validation.
 - Date-window parsing and boundary cases.
 - Event attribution rules, including ambiguous actors.
+- Exclusion of draft and unpublished releases even when fixtures simulate authenticated access.
 - Aggregation from normalized records.
 - Markdown escaping and stable report sections.
 - JSON schema version and deterministic serialization.
