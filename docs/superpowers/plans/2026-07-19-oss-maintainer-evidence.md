@@ -14,7 +14,7 @@
 
 - Follow the approved design in `docs/superpowers/specs/2026-07-19-oss-maintainer-evidence-design.md`.
 - Use redacted fixtures only. Never copy private, internal, or corporate repository data into this project.
-- Keep all GitHub requests on `github.com`, use only `GET`, and pass process arguments without a shell.
+- Keep every GitHub request made by the `oss-evidence` runtime adapter on `github.com`, use only `GET`, and pass process arguments without a shell. Owner-authorized repository and release administration is outside the runtime adapter and must use only the exact targets named in Tasks 14, 17, and 18.
 - Add a failing test before each behavior change, observe the expected failure, implement the smallest passing change, then run the focused test again.
 - Run `npm run check` before every task commit once that script exists.
 - Commit each completed task separately. Do not squash the public history before `0.1.0`; the history should remain an honest record of development.
@@ -58,7 +58,7 @@ Use this dependency policy:
 }
 ```
 
-Set `type: "module"`, `engines.node: ">=22"`, `bin.oss-evidence: "./dist/cli.js"`, `files` to `dist`, `schema`, `README.md`, `LICENSE`, and package scripts for `build`, `typecheck`, `test`, `format`, `lint`, `check`, and `prepack`. Keep the package private until release preparation; do not publish from this task.
+Set `type: "module"`, `engines.node: ">=22"`, `bin.oss-evidence: "./dist/cli.js"`, `files` to `dist`, `schema`, `README.md`, `LICENSE`, and package scripts for `build`, `typecheck`, `test`, `format`, `lint`, `check`, and `prepack`. Keep `private: true` throughout `0.1.0`; the first release distributes a verified npm-compatible archive through GitHub Releases and cannot be accidentally published to npm.
 
 Configure TypeScript with `target: "ES2022"`, `module: "NodeNext"`, `moduleResolution: "NodeNext"`, strict checking, Node types, source maps, declarations for the production build, and separate `.test-dist` output for tests. Ignore `node_modules`, `dist`, `.test-dist`, coverage output, generated archives, environment files, and local evidence output.
 
@@ -182,23 +182,24 @@ git commit -m "feat: define versioned evidence report"
 
 - Create: `src/process/gh-runner.ts`
 - Create: `src/github/endpoints.ts`
+- Create: `src/github/contracts.ts`
 - Create: `test/gh-runner.test.ts`
 - Create: `test/endpoints.test.ts`
 
 - [ ] **Step 1: Add failing process-boundary tests**
 
-Inject a fake spawn function and assert the exact executable and arguments: `gh api --hostname github.com --method GET`, official Accept and API-version headers, and one validated endpoint. Assert `shell: false`, bounded timeout, stdout size cap, and no inherited secret values in thrown messages. Simulate missing CLI, timeout, nonzero exit, malformed JSON, rate limit, and authentication failure.
+Inject a fake spawn function and assert the exact executable and arguments: `gh api --hostname github.com --method GET --include`, official Accept and API-version headers, and one validated endpoint. Assert `shell: false`, bounded timeout, stdout size cap, and no inherited secret values in thrown messages. Simulate missing CLI, timeout, nonzero exit, malformed status/header framing, malformed JSON, rate limit, and authentication failure.
 
 Run: `npm test -- --test-name-pattern="GitHub CLI|endpoint"`  
 Expected: failure because the adapter does not exist.
 
 - [ ] **Step 2: Implement a GET-only endpoint builder**
 
-Permit only the documented route families used by this project. Query values must be encoded by `URLSearchParams`; repository and user values must already pass input validation. Reject absolute URLs, path traversal, mutation methods, GraphQL, and arbitrary endpoint strings at the adapter boundary.
+Permit only the documented route families used by this project. Define a typed contract registry that fixes each route's Accept header, API version `2026-03-10`, pagination mode, expected absence status, and classification as required activity or optional metadata. Query values must be encoded by `URLSearchParams`; repository and user values must already pass input validation. Reject absolute URLs, path traversal, mutation methods, GraphQL, and arbitrary endpoint strings at the adapter boundary.
 
 - [ ] **Step 3: Implement bounded process execution**
 
-Use `spawn` with an argument array and `shell: false`. Capture only bounded stdout/stderr, terminate on timeout, parse JSON after a successful exit, and map safe failure categories without displaying raw headers or environment data. Do not read token environment variables or GitHub authentication files.
+Use `spawn` with an argument array and `shell: false`. Request `--include`, split the GitHub CLI response into a numeric status, a case-insensitive header map, and a JSON body, then immediately discard every response header except `link`. Capture only bounded stdout/stderr, terminate on timeout, parse JSON after a successful exit, and map safe failure categories without displaying raw headers or environment data. Do not read token environment variables or GitHub authentication files.
 
 Run: `npm test -- --test-name-pattern="GitHub CLI|endpoint"`  
 Expected: all focused tests pass.
@@ -209,7 +210,7 @@ Run: `npm run check`
 Expected: all checks pass.
 
 ```bash
-git add src/process/gh-runner.ts src/github/endpoints.ts test/gh-runner.test.ts test/endpoints.test.ts
+git add src/process/gh-runner.ts src/github/endpoints.ts src/github/contracts.ts test/gh-runner.test.ts test/endpoints.test.ts
 git commit -m "feat: add safe read-only GitHub adapter"
 ```
 
@@ -240,7 +241,7 @@ Call `/repos/{owner}/{repo}` before every other endpoint. Require `private: fals
 
 - [ ] **Step 4: Implement manual pagination helpers**
 
-Fetch pages one at a time so `maxItems` is enforceable. Return items, fetched count, and `truncated`. For search, also surface `incomplete_results`, `total_count > maxItems`, and GitHub's 1,000-result limit as partial conditions. Never stop early based only on assumed result ordering; locally enforce the inclusive UTC window.
+Fetch pages one at a time so `maxItems` is enforceable. Parse only the retained `link` header for `rel="next"`; never log or store raw response headers. Return items, fetched count, and `truncated`. Reaching `maxItems` with a next link means `truncated: true` without fetching beyond the cap. For search, also surface `incomplete_results`, `total_count > maxItems`, and GitHub's 1,000-result limit as partial conditions. Never stop early based only on assumed result ordering; locally enforce the inclusive UTC window.
 
 Run: `npm run check`  
 Expected: all checks pass.
@@ -312,7 +313,7 @@ Use the search query `repo:OWNER/REPO is:public is:pr author:USER created:SINCE.
 
 - [ ] **Step 3: Implement merged pull and review detail collection**
 
-Search merged candidates within the window and fetch each pull detail to verify `merged_by`. Search `reviewed-by:USER` candidates, then fetch paginated review records and keep only submitted reviews matching the maintainer and window. Deduplicate reviews by review ID.
+Search merged candidates within the window and fetch each pull detail to verify `merged_by`. Search `reviewed-by:USER` candidates, then fetch paginated review records and keep only submitted reviews matching the maintainer and window. Deduplicate reviews by review ID. A failed candidate detail or review-list request is a required activity-endpoint failure: abort with exit `3` and emit no report, because omitting the candidate could understate maintainer work.
 
 Run: `npm run check`  
 Expected: all checks pass.
@@ -348,7 +349,7 @@ Use `is:issue`, validate results locally, and fetch details for closed candidate
 
 - [ ] **Step 3: Implement repository issue comment collection**
 
-Request comments sorted ascending with `since` set one second before the desired boundary, then filter exactly by actor and `created_at`. Fetch and cache parent issue records to exclude pull request discussion comments. Surface capped pages or unavailable required parents as required/partial failures according to whether attribution can remain complete.
+Request comments sorted ascending with `since` set one second before the desired boundary, then filter exactly by actor and `created_at`. Fetch and cache parent issue records to exclude pull request discussion comments. A failed closed-issue detail or parent-issue request is a required activity-endpoint failure: abort with exit `3` and emit no report. Capped pages remain partial with exit `4` because the report can identify the exact truncation.
 
 Run: `npm run check`  
 Expected: all checks pass.
@@ -370,7 +371,7 @@ git commit -m "feat: collect issue maintainer evidence"
 
 - [ ] **Step 1: Add failing orchestration tests**
 
-With injected collectors and a fixed clock, prove preflight runs first, required collectors fail closed with exit category `3` and no report, optional endpoint failures generate structured limitations and `status: partial`, pagination caps set `truncated`, deterministic ordering holds regardless of completion order, and all summary counts match final arrays.
+With injected collectors and a fixed clock, prove preflight runs first, required list/search calls and every attribution-required detail call fail closed with exit category `3` and no report, optional community/security-policy/contributor endpoint failures generate structured limitations and `status: partial`, pagination caps set `truncated`, deterministic ordering holds regardless of completion order, and all summary counts match final arrays.
 
 Run: `npm test -- --test-name-pattern="collection orchestration"`  
 Expected: failure because the application service does not exist.
@@ -522,37 +523,67 @@ git commit -m "docs: establish public contributor standards"
 
 - Create: `.github/workflows/ci.yml`
 - Create: `.github/workflows/dependency-review.yml`
+- Create: `.github/workflows/release-artifacts.yml`
 - Create: `.github/dependabot.yml`
 - Create: `.github/release.yml`
+- Create: `scripts/check-licenses.mjs`
+- Create: `scripts/verify-package.mjs`
 - Create: `test/workflows.test.ts`
+- Create: `test/licenses.test.ts`
 - Modify: `package.json`
 
 - [ ] **Step 1: Add failing workflow policy tests**
 
-Parse workflow text and assert least-privilege default permissions, pinned major official actions, no `pull_request_target`, no untrusted script downloads, Node 22 and 24 test matrix, dependency review on pull requests, and no automatic package publication.
+Parse workflow text and assert least-privilege default permissions, pinned major official actions, no `pull_request_target`, no untrusted script downloads, Node 22 and 24 test matrix, dependency review on pull requests, and no automatic registry publication. Add license-policy tests that reject missing, unknown, copyleft-incompatible, or unapproved dependency license expressions and accept the reviewed SPDX allowlist.
 
 Run: `npm test -- --test-name-pattern="workflow"`  
 Expected: failure because workflows do not exist.
 
 - [ ] **Step 2: Add the CI workflow**
 
-Run install with `npm ci`, schema freshness, format/lint, type check, tests, build, `npm audit --omit=dev`, and `npm pack --dry-run`. Use read-only contents permission and official checkout/setup-node actions. Upload no fixture or report data.
+Run install with `npm ci`, schema freshness, format/lint, type check, tests, build, `npm audit --omit=dev`, dependency license checking, and a real pack/install/help/version smoke test on both Node 22 and 24. `scripts/check-licenses.mjs` must inspect the installed direct and transitive packages against a reviewed SPDX allowlist and print package names plus license identifiers, never file contents. `scripts/verify-package.mjs` must create a bounded temporary directory, pack the current checkout, install that archive, invoke the installed binary, and clean only its own temporary paths. Use read-only contents permission and official checkout/setup-node actions. Upload no fixture or report data.
 
 - [ ] **Step 3: Add dependency and release metadata**
 
-Configure weekly npm updates with a small open-request cap. Add dependency review with read permissions. Configure generated release-note categories, but keep tagging and publishing human-triggered.
+Configure weekly npm updates with a small open-request cap. Add dependency review with read permissions. Configure generated release-note categories, but keep tagging and publishing human-triggered. Add a tag-triggered `release-artifacts.yml` that rebuilds the archive from the tag, generates a SHA-256 checksum, creates GitHub build provenance with `actions/attest-build-provenance`, and uploads the archive plus checksum as workflow artifacts. Give only that job `id-token: write`, `attestations: write`, and `contents: read`; it must not create a release or publish to a registry.
 
-Run: `npm run check && npm pack --dry-run`  
-Expected: local checks pass and the archive contains only intended distributable files.
+Run: `npm run check && npm run license:check && npm run package:verify`
+Expected: local checks pass, every dependency license is approved, and a clean archive install exposes the expected help and version.
 
 - [ ] **Step 4: Commit**
 
 ```bash
-git add .github/workflows/ci.yml .github/workflows/dependency-review.yml .github/dependabot.yml .github/release.yml test/workflows.test.ts package.json package-lock.json
+git add .github/workflows/ci.yml .github/workflows/dependency-review.yml .github/workflows/release-artifacts.yml .github/dependabot.yml .github/release.yml scripts/check-licenses.mjs scripts/verify-package.mjs test/workflows.test.ts test/licenses.test.ts package.json package-lock.json
 git commit -m "ci: verify builds and dependencies"
 ```
 
-## Task 14: Produce and Verify the `0.1.0` Release Candidate
+## Task 14: Create the Public Repository and Verify Pre-Release CI
+
+**Remote actions:**
+
+- Create: `https://github.com/kilmidas/oss-maintainer-evidence`
+- Push: reviewed local `main` history
+- Configure: description, topics, issue tracker, private vulnerability reporting, and available branch protection or rulesets
+
+The repository owner explicitly authorized creation, push, profile setup, and application completion in the current conversation on 2026-07-19. That authorization covers the remote actions named in Tasks 14, 17, and 18. Before each write, verify the authenticated account and exact target. Stop only if the account, repository, visibility, or action differs from this recorded scope. npm publication is not part of `0.1.0` and remains blocked by `private: true`.
+
+- [ ] **Step 1: Finish and integrate the reviewed implementation branch**
+
+After Tasks 1–13 pass both compliance and code-quality review, use the documented branch-finishing procedure to integrate the exact reviewed commits into local `main`. Run `npm run check` on `main` and verify a clean worktree before any remote creation.
+
+- [ ] **Step 2: Recheck namespace and authenticated identity**
+
+Use the public GitHub API to confirm the exact repository path is still available. Use `gh auth status --hostname github.com` without printing credential material, and verify the authenticated account is exactly `kilmidas`. If authentication is missing, use GitHub's official web login flow; never inspect token files, cookies, or browser storage.
+
+- [ ] **Step 3: Create the public repository and push the reviewed history**
+
+Create a public repository without auto-generated files, add `origin`, push `main`, and set the repository description and factual topics. The tracked Apache-2.0 file is the only license source. Verify the signed-out public URL and compare the remote head with the local head.
+
+- [ ] **Step 4: Verify public automation and repository health**
+
+Wait for CI and dependency review. Enable private vulnerability reporting and protections available to the account without weakening contributor access. Confirm license detection, community files, issue templates, security policy, and exact workflow permissions through public pages or API responses. Fix real failures on a focused branch and let CI rerun.
+
+## Task 15: Produce and Verify the `0.1.0` Release Candidate
 
 **Files:**
 
@@ -564,7 +595,7 @@ git commit -m "ci: verify builds and dependencies"
 
 - [ ] **Step 1: Build and run the real command on its public repository**
 
-This step occurs only after the GitHub repository is public and GitHub CLI login works. Run collection for `kilmidas/oss-maintainer-evidence` and inspect every link in the report. Early repository activity may legitimately be sparse; preserve truthful zeros and limitations.
+Run collection for `kilmidas/oss-maintainer-evidence` only after Task 14 makes the repository public. Inspect every link in the report. Early activity may legitimately be sparse; preserve truthful zero values and limitations.
 
 Run:
 
@@ -576,63 +607,64 @@ node dist/cli.js collect kilmidas/oss-maintainer-evidence --maintainer kilmidas 
 
 Expected: both outputs validate, use only public GitHub links, and contain no secrets.
 
-- [ ] **Step 2: Run clean package verification**
+- [ ] **Step 2: Finalize release-facing content before packaging**
 
 Run:
 
 ```bash
 npm run check
 npm audit --omit=dev
+npm run license:check
 npm pack --dry-run
 ```
 
-Install the generated archive in a new temporary directory, then run `oss-evidence --help` and `oss-evidence --version`. Confirm Node 22 and 24 in CI before tagging.
+Add the verified example links to README, finalize `CHANGELOG.md`, and write a release checklist covering CI, dependency licenses, archive contents, public link inspection, secret scan, tag/version match, attestation verification, checksum generation, and recovery guidance. Review all of these tracked changes before creating the final archive.
 
-- [ ] **Step 3: Review release-facing content**
-
-Add the verified example links to README, finalize `CHANGELOG.md`, and write a release checklist covering CI, package contents, public link inspection, secret scan, tag/version match, and rollback guidance.
-
-- [ ] **Step 4: Commit the release candidate**
+- [ ] **Step 3: Commit and publish the release candidate changes**
 
 ```bash
 git add examples docs/release-checklist.md README.md CHANGELOG.md
 git commit -m "docs: prepare 0.1.0 release candidate"
+git push origin main
 ```
 
-## Task 15: Publish the Public Repository and GitHub Release
+Wait for Node 22 and 24 CI, including archive installation, to pass. Do not tag or retain any pre-commit archive as a release candidate.
 
-**Remote actions:**
+## Task 16: Run an Independent Pre-Release Audit
 
-- Create: `https://github.com/kilmidas/oss-maintainer-evidence`
-- Push: local `main` history
-- Configure: description, topics, homepage if applicable, issue tracker, vulnerability reporting, branch protection/ruleset when account capabilities allow it
-- Release: tag `v0.1.0` with generated notes and verified package archive
+**Review scope:** all tracked project files, public repository settings, generated examples, and the exact commit proposed for release
 
-- [ ] **Step 1: Recheck namespace and authenticated identity**
+- [ ] **Step 1: Run an independent code and trust-boundary review**
 
-Use public GitHub API to confirm the exact repository path is still available. Use `gh auth status --hostname github.com` without printing credential material, and verify the authenticated account is `kilmidas`. If authentication is missing, use GitHub's official web login flow; never inspect token files, cookies, or browser storage.
+Have a reviewer inspect input handling, subprocess execution, `--include` framing, endpoint allowlist, response validation, attribution rules, required versus optional endpoint failures, partial semantics, Markdown escaping, output safety, tests, workflows, and documentation claims. Fix every confirmed high or medium severity issue with a failing regression test and a separate commit.
 
-- [ ] **Step 2: Create the public repository and push the reviewed history**
+- [ ] **Step 2: Fix findings and freeze the reviewed commit**
 
-Create an Apache-2.0 public repository without auto-generated files, add `origin`, push `main`, and set the repository description and topics. Verify the public signed-out URL and compare the remote head with the local head.
+Fix confirmed findings with regression tests, push them, and wait for the complete Node 22 and 24 matrix. Then verify a clean worktree and matching local and remote `main` commits. Record that exact commit identifier as the proposed release commit; any subsequent tracked change invalidates the freeze.
 
-- [ ] **Step 3: Verify public automation and repository health**
+- [ ] **Step 3: Build the local candidate from a clean checkout**
 
-Wait for CI and dependency checks. Enable private vulnerability reporting and available branch/ruleset protections without weakening contributor access. Confirm community-profile detection, license detection, issue templates, security policy, and release readiness through public API responses.
+Create a detached temporary worktree at the frozen commit. Inside it run `npm ci`, `npm run check`, `npm audit --omit=dev`, `npm run license:check`, and `npm run package:verify`, then create the archive with `npm pack`. Inspect the file list, install it in another fresh temporary directory, run help/version, and calculate SHA-256. Store the archive, checksum, commit identifier, and CI URL only in a dedicated temporary release-staging directory outside the tracked tree. Remove the detached worktree after verification. This local artifact proves reproducibility but is not yet the attested release asset.
 
-- [ ] **Step 4: Create the real `0.1.0` release**
+## Task 17: Publish and Reproduce the GitHub `0.1.0` Release
 
-Create annotated tag `v0.1.0` only after CI passes. Build the archive from the exact tag, verify its checksums and contents, attach it to the GitHub release, and publish reviewed release notes. Publish to npm only if official npm authentication is already available, the name remains unclaimed, and the package archive matches the tag; otherwise document GitHub installation and leave npm publication for a later release.
+- [ ] **Step 1: Verify recorded owner authorization and release target**
 
-- [ ] **Step 5: Verify release reproducibility**
+Confirm the current authenticated account is `kilmidas`, the target is `kilmidas/oss-maintainer-evidence`, the release is public `v0.1.0`, and the frozen commit is still remote `main`. The current owner directive authorizes this GitHub release. Do not publish to npm or any unrelated registry.
 
-Download the public release archive into a fresh temporary directory, install it, run help/version, and collect a JSON report from the public repository. Confirm the report validates against `schema/report-v1.json` and every evidence URL opens publicly.
+- [ ] **Step 2: Tag the frozen commit and obtain the attested artifact**
 
-- [ ] **Step 6: Record the publication commit or metadata update**
+Create annotated tag `v0.1.0` on the frozen commit and push only that tag. Wait for `release-artifacts.yml`, then download its archive and checksum. Verify the GitHub build provenance with `gh attestation verify --repo kilmidas/oss-maintainer-evidence`, verify the checksum, compare package file lists with the local candidate, and repeat the clean install help/version smoke test. A failed attestation or package-content mismatch blocks release publication.
 
-If release URLs or npm status require documentation changes, add one focused commit and wait for CI again. Do not rewrite or force-push history.
+- [ ] **Step 3: Publish and verify the GitHub release**
 
-## Task 16: Improve the Public GitHub Profile Truthfully
+Create the GitHub release for `v0.1.0`, attach only the attested workflow archive and checksum, and publish reviewed release notes. Download those public assets into a fresh temporary directory, verify provenance and checksum again, install the archive, run help/version, and collect a JSON report from the public repository. Validate the report against `schema/report-v1.json` and verify every evidence URL opens publicly.
+
+- [ ] **Step 4: Record any post-release metadata update**
+
+If the final release URL requires a README or changelog link update, make one focused commit on `main`, push it, and wait for CI. The `v0.1.0` tag remains on the frozen release commit.
+
+## Task 18: Improve the Public Profile and Capture Application Evidence
 
 **Remote and local files:**
 
@@ -641,7 +673,7 @@ If release URLs or npm status require documentation changes, add one focused com
 
 - [ ] **Step 1: Create a minimal factual profile README**
 
-State 김성훈's public role as the maintainer of OSS Maintainer Evidence, link the repository and latest release, explain the local Codex maintenance workflow, and provide the public contact already supplied by the owner. Do not mention internal repositories or unverifiable employer work.
+State the owner's public role as the maintainer of OSS Maintainer Evidence, link the repository and latest release, and explain the local Codex maintenance workflow. Use repository issues and the documented security channel for contact. Do not publish the application email, mention internal repositories, or make unverifiable employer or adoption claims.
 
 - [ ] **Step 2: Pin and verify the project**
 
@@ -651,21 +683,9 @@ Pin the repository using supported GitHub controls. Open the signed-out public p
 
 Keep the profile repository history factual and separate from product history. Do not manufacture contribution activity.
 
-## Task 17: Independent Release Audit
+- [ ] **Step 4: Record public application evidence**
 
-**Review scope:** all tracked project files, public repository settings, release artifact, and public profile
-
-- [ ] **Step 1: Run an independent code and trust-boundary review**
-
-Have a reviewer inspect input handling, subprocess execution, endpoint allowlist, response validation, attribution rules, partial/fatal semantics, Markdown escaping, output safety, tests, workflows, and documentation claims. Fix every confirmed high or medium severity issue with a failing regression test and a separate commit.
-
-- [ ] **Step 2: Run the complete verification matrix again**
-
-Run local `npm run check`, schema freshness, audit, package dry run, temporary install, fake integration tests, real public collection, and remote CI. Compare local and remote tag commits and verify a clean worktree.
-
-- [ ] **Step 3: Record release evidence for application preparation**
-
-Capture only public URLs and current observed facts: repository, release, CI run, security policy, example report, profile, license, and current stars/forks/contributors. Label small or zero metrics honestly. Do not turn initialization commits into claims of long-term maintenance.
+Capture only public URLs and current observed facts: repository, release, passing CI run, security policy, example report, profile, license, current stars/forks/contributors, and the owner's visible maintainer permissions. Label small or zero metrics honestly. Do not turn initialization commits into claims of long-term maintenance.
 
 ## Completion Gate
 
@@ -676,6 +696,6 @@ The implementation and first-release plan is complete only when all of the follo
 - The report contract, attribution rules, partial semantics, and limitations are documented and tested.
 - The repository, release archive, example reports, security policy, and profile are publicly accessible.
 - The public history contains the real design, implementation, review fixes, and release work without fabricated activity.
-- An independent audit reports no unresolved high or medium severity issue.
+- An independent pre-release audit reports no unresolved high or medium severity issue.
 
-Application drafting and submission begin only after this gate. The application must describe the project as it exists at submission time and must not claim guaranteed eligibility, established adoption, or long-term maintenance unless public evidence then supports those claims.
+After this gate, begin the separate real-maintenance phase: use the release, record genuine defects or documentation gaps as public issues, fix them through reviewed branches, and publish a follow-up release when justified. Application drafting and submission remain blocked until a fresh readiness audit confirms every condition in the approved design, including real issue, fix, review, follow-up release, and current ecosystem or adoption evidence. The application must describe the project as it exists at submission time and must not claim guaranteed eligibility, established adoption, or long-term maintenance unless public evidence then supports those claims. Obtain or reconfirm explicit owner approval for the final populated form immediately before submission.

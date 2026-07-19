@@ -238,7 +238,7 @@ Stars, followers, downloads, contributors, and activity will never be purchased,
 The implementation plan produced from this design covers only phases 1 and 2 through version `0.1.0`:
 
 1. **Foundation:** project structure, CLI contract, safe GitHub adapter, fixtures, renderers, tests, community files, and continuous integration.
-2. **First public release:** sample evidence pack, installation path, release notes, package publication if the package name remains available, and profile pinning.
+2. **First public release:** sample evidence pack, installation path, release notes, an npm-compatible package archive published through GitHub Releases, and profile pinning. npm registry publication is deferred until the owner has a verified npm publishing identity and there is user demand; `0.1.0` remains registry-private to prevent an accidental publish.
 
 The following are operating phases after the first implementation plan, not additional product subsystems:
 
@@ -250,7 +250,7 @@ The following are operating phases after the first implementation plan, not addi
 These are bounded choices, not missing product requirements:
 
 - Confirm that the GitHub repository name `oss-maintainer-evidence` is available immediately before creation.
-- Confirm an available npm package name; otherwise publish under a scoped package such as `@kilmidas/oss-evidence`.
+- Confirm that the local package name remains unambiguous before a future npm registry release; a registry publish is not part of `0.1.0`.
 - Select the smallest maintained libraries for argument parsing, validation, and testing after checking current Node.js compatibility.
 
 No other first-release functionality is intentionally left unspecified.
