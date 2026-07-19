@@ -8,7 +8,7 @@ The report is evidence, not a verdict. The tool does not score or decide grant o
 
 - Node.js 22 or later
 - [GitHub CLI](https://cli.github.com/) authenticated to `github.com`
-- A public, non-fork GitHub repository
+- A public GitHub repository
 
 Authenticate with GitHub CLI before collecting evidence:
 

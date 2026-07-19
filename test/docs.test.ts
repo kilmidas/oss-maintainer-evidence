@@ -93,6 +93,13 @@ test("documentation routes vulnerabilities privately and avoids eligibility clai
   assert.match(publicDocs, /does not (?:score|decide)[^\n]*eligibility/i);
 });
 
+test("documentation does not claim public forks are rejected", () => {
+  const scopeDocs = ["README.md", "docs/architecture.md", "docs/limitations.md"]
+    .map(read)
+    .join("\n");
+  assert.doesNotMatch(scopeDocs, /non-fork|fork[^\n]*(?:reject|fail closed)/i);
+});
+
 function escapeRegex(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }

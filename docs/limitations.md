@@ -4,7 +4,7 @@ Version `0.1.0` is deliberately narrow so every reported item has a transparent 
 
 ## Collection scope
 
-- Only one public, non-fork repository on GitHub.com is accepted per run.
+- Only one public repository on GitHub.com is accepted per run. Public forks are accepted, but the report describes the fork rather than its upstream repository.
 - Authentication is provided by GitHub CLI but does not expand the scope to private, internal, or enterprise repositories.
 - Deleted users, hidden events, unavailable fields, and API permission differences can prevent attribution.
 - Draft and unpublished releases are excluded.

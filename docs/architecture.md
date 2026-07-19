@@ -6,7 +6,7 @@ OSS Maintainer Evidence is a local Node.js CLI with explicit boundaries between 
 
 1. The CLI parses a bounded repository name, maintainer, reporting window, format, output path, and item cap.
 2. The runtime creates a GitHub client backed by a fixed `gh api --method GET --hostname github.com` process boundary.
-3. Public-repository preflight runs before activity endpoints. Private, internal, missing, fork, and noncanonical repository targets fail closed.
+3. Public-repository preflight runs before activity endpoints. Private, internal, missing, and noncanonical repository targets fail closed.
 4. Typed endpoint contracts build every path and query. Pagination follows only validated next links that remain in the same endpoint family.
 5. Collectors validate responses, apply the rules in [attribution.md](attribution.md), and return activities plus limitations.
 6. The application assembles and validates the report. Required collection failures produce no report; optional gaps produce a valid partial report.
