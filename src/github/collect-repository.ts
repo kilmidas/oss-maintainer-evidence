@@ -117,11 +117,8 @@ export async function collectRepository(input: Input, deps: CollectionDeps) {
     });
   }
   const community: Record<string, unknown> = {};
-  let profileAvailable = false;
-  try {
-    await deps.getCommunityProfile();
-    profileAvailable = true;
-  } catch {
+  let profile: Record<string, unknown> = {};
+  try { const p = await deps.getCommunityProfile(); profile = (p && typeof p === "object" ? p : {}) as Record<string, unknown>; } catch {
     partial = true;
     limitations.push({
       code: "community_unavailable",
@@ -129,6 +126,8 @@ export async function collectRepository(input: Input, deps: CollectionDeps) {
       message: "Community profile unavailable",
     });
   }
+  const files = (profile.files && typeof profile.files === "object" ? profile.files : {}) as Record<string, unknown>;
+  const map: Record<string,string> = { readme:"readme", license:"license", contributing:"contributing", codeOfConduct:"code_of_conduct", issueTemplate:"issue_template", pullRequestTemplate:"pull_request_template" };
   for (const k of [
     "readme",
     "license",
@@ -138,12 +137,12 @@ export async function collectRepository(input: Input, deps: CollectionDeps) {
     "issueTemplate",
     "pullRequestTemplate",
   ])
-    community[k] = profileAvailable
-      ? { status: "present", sourceUrl: repository.sourceUrl }
-      : { status: "unavailable" };
+    const f = files[map[k]]; const u = f && typeof f === "object" ? (f as Record<string,unknown>).html_url ?? (f as Record<string,unknown>).url : undefined;
+    community[k] = typeof u === "string" && u.startsWith(`${repository.sourceUrl}/`) ? { status: "present", sourceUrl: u } : { status: "absent" };
   for (const p of paths) {
     try {
-      await deps.getContent(p);
+      const c = await deps.getContent(p);
+      if (c && typeof c === "object" && "status" in c && (c as {status?:unknown}).status === "unavailable") { partial=true; continue; }
       const key = p.includes("SECURITY") ? "securityPolicy" : p;
       if (key in community)
         community[key] = {
