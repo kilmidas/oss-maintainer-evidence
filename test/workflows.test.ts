@@ -154,7 +154,7 @@ test("reusable evidence workflow checks out only its immutable definition source
   assert.match(checkout, /persist-credentials: false/);
   assert.doesNotMatch(workflow, /repository: \$\{\{ github\.repository \}\}/);
   assert.doesNotMatch(workflow, /\n\s+secrets:/);
-  assert.doesNotMatch(workflow, /\$\{\{\s*secrets\./);
+  assert.doesNotMatch(workflow, /\$\{\{\s*secrets(?:\.|\[)/);
 });
 
 test("reusable evidence workflow scopes inputs and authentication to collection", () => {
@@ -168,7 +168,11 @@ test("reusable evidence workflow scopes inputs and authentication to collection"
   );
 
   assert.equal(
-    [...workflow.matchAll(/\$\{\{\s*github\.token\s*\}\}/g)].length,
+    [
+      ...workflow.matchAll(
+        /\$\{\{\s*(?:github(?:\.token|\s*\[\s*["']token["']\s*\])|secrets(?:\.GITHUB_TOKEN|\s*\[\s*["']GITHUB_TOKEN["']\s*\]))\s*\}\}/g,
+      ),
+    ].length,
     1,
   );
   assert.match(collection, /GH_TOKEN: \$\{\{ github\.token \}\}/);
