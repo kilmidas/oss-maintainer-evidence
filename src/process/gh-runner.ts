@@ -25,6 +25,7 @@ export type GhErrorCategory =
   | "json"
   | "rate_limit"
   | "auth"
+  | "server"
   | "output";
 export class GhApiError extends Error {
   constructor(
@@ -183,6 +184,7 @@ export async function runGhApi(
     throw new GhApiError("auth", safeMessage("auth"));
   if (status === 429)
     throw new GhApiError("rate_limit", safeMessage("rate_limit"));
+  if (status >= 500) throw new GhApiError("server", safeMessage("server"));
   if (code !== 0 || status >= 400)
     throw new GhApiError("exit", safeMessage("exit"));
   if (status === 204)

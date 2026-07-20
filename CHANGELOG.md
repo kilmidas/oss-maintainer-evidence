@@ -15,6 +15,10 @@ All notable changes to this project are documented in this file. The format foll
 
 - Added convenience and checksum-plus-attestation release execution paths.
 
+### Fixed
+
+- Authenticated GitHub API 5xx responses now get one bounded, credential-free retry of the same allowlisted public GET; authentication, permission, and rate-limit failures still fail closed.
+
 ## [0.2.0] - 2026-07-20
 
 ### Added

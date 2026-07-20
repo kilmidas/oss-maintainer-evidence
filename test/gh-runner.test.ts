@@ -84,6 +84,27 @@ test("maps an expected 404 to absence even when gh exits nonzero", async () => {
   assert.equal(result.body, undefined);
 });
 
+test("maps GitHub 5xx responses to a server failure", async () => {
+  await assert.rejects(
+    runGhApi(
+      buildEndpoint(ENDPOINTS.issue, {
+        owner: "octo",
+        repo: "hello",
+        number: 7,
+      }),
+      {
+        spawn: mockSpawn(
+          'HTTP/1.1 503 Service Unavailable\r\nContent-Type: application/json\r\n\r\n{"message":"unavailable"}',
+          undefined,
+          1,
+        ),
+      },
+    ),
+    (error: unknown) =>
+      error instanceof GhApiError && error.category === "server",
+  );
+});
+
 test("bounds timeout failure when the child ignores termination signals", {
   timeout: 500,
 }, async () => {
