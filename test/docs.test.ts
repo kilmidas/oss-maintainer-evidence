@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 
 const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const read = (path: string) => readFileSync(resolve(projectRoot, path), "utf8");
+const reusableWorkflowSha = "3a9aba7273decb55c455a925a3c06370f6213967";
 
 const requiredFiles = [
   "README.md",
@@ -53,13 +54,13 @@ test("documentation README contains the exact current command help", () => {
   );
 });
 
-test("documentation describes the 0.2.0 signed-out verifier boundary", () => {
+test("documentation describes the signed-out verifier boundary", () => {
   const packageMetadata = JSON.parse(read("package.json")) as {
     version: string;
     private: boolean;
   };
   const readme = read("README.md");
-  assert.equal(packageMetadata.version, "0.2.0");
+  assert.equal(packageMetadata.version, "0.3.0");
   assert.equal(packageMetadata.private, true);
   assert.match(readme, /oss-evidence verify <report\.json>/);
   assert.match(readme, /without (?:GitHub )?credentials/i);
@@ -182,6 +183,77 @@ test("public documentation provides a safe independent validation path", () => {
     /does not imply endorsement, certification, or affiliation/i,
   );
   assert.doesNotMatch(issueForm, /token value|private report contents/i);
+});
+
+test("public documentation provides immutable and convenient workflow callers", () => {
+  const readme = read("README.md");
+  const yamlBlocks = [...readme.matchAll(/```yaml\n([\s\S]*?)```/g)].map(
+    (match) => match[1],
+  );
+  const immutable = yamlBlocks.find((block) =>
+    block.includes(`collect-evidence.yml@${reusableWorkflowSha} # v0.3.0`),
+  );
+  const tagged = yamlBlocks.find((block) =>
+    block.includes("collect-evidence.yml@v0.3.0"),
+  );
+
+  assert.ok(immutable, "immutable reusable workflow example");
+  assert.match(immutable, /^permissions:\n {2}contents: read$/m);
+  assert.match(immutable, /repository: owner\/repository/);
+  assert.match(immutable, /maintainer: username/);
+  assert.doesNotMatch(immutable, /secrets:/);
+  assert.ok(tagged, "tagged reusable workflow example");
+  assert.match(readme, /tag can be moved/i);
+  assert.match(readme, /not the recommended security path/i);
+  assert.match(readme, /caller repository[^\n]*runner usage/i);
+});
+
+test("public documentation provides convenience and verified release execution", () => {
+  const readme = read("README.md");
+  const convenience =
+    "npm exec --yes --package=https://github.com/kilmidas/oss-maintainer-evidence/releases/download/v0.3.0/oss-evidence-0.3.0.tgz -- oss-evidence --version";
+  const localArchive =
+    'npm exec --yes --package="$PWD/oss-evidence-0.3.0.tgz" -- oss-evidence --version';
+
+  assert.ok(readme.includes(convenience));
+  assert.match(
+    readme,
+    /does not automatically verify[^\n]*(?:checksum|attestation)/i,
+  );
+  assert.match(
+    readme,
+    /gh release download v0\.3\.0 --repo kilmidas\/oss-maintainer-evidence/,
+  );
+  assert.match(readme, /shasum -a 256 -c oss-evidence-0\.3\.0\.tgz\.sha256/);
+  assert.match(
+    readme,
+    /gh attestation verify oss-evidence-0\.3\.0\.tgz\s+\\?\s*--repo kilmidas\/oss-maintainer-evidence/,
+  );
+  assert.ok(readme.includes(localArchive));
+  assert.match(readme, /expected output:\s*`0\.3\.0`/i);
+});
+
+test("validation and release docs preserve honest workflow interpretation", () => {
+  const readme = read("README.md");
+  const guide = read("docs/independent-validation.md");
+  const checklist = read("docs/release-checklist.md");
+  const changelog = read("CHANGELOG.md");
+
+  assert.match(readme, /self-smoke[^\n]*not independent adoption/i);
+  assert.match(guide, /reusable workflow/i);
+  assert.match(guide, /pin[^\n]*40-character commit SHA/i);
+  assert.match(guide, /only public GitHub\.com data/i);
+  assert.match(guide, /oss-maintainer-evidence[^\n]*artifact/i);
+  assert.match(checklist, /reusable workflow/i);
+  assert.match(checklist, /Evidence Smoke/);
+  assert.match(checklist, /gh attestation verify/);
+  assert.match(changelog, /## \[0\.3\.0]/);
+  assert.match(changelog, /immutable commit/i);
+  assert.match(changelog, /self-smoke/i);
+  assert.doesNotMatch(
+    [readme, guide, checklist, changelog].join("\n"),
+    /self-smoke[^\n]*(?:proves|demonstrates)[^\n]*(?:adoption|endorsement)/i,
+  );
 });
 
 test("the standard check validates the committed ecosystem ledger", () => {

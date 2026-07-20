@@ -1,0 +1,93 @@
+name: Collect OSS Maintainer Evidence
+
+on:
+  workflow_call:
+    inputs:
+      repository:
+        description: Public GitHub repository in owner/repository form
+        required: true
+        type: string
+      maintainer:
+        description: GitHub username whose public maintenance activity is reported
+        required: true
+        type: string
+      since:
+        description: Inclusive reporting-window start as 90d or an ISO timestamp
+        required: false
+        default: 90d
+        type: string
+      max_items:
+        description: Maximum items collected per paginated resource
+        required: false
+        default: 200
+        type: number
+
+permissions:
+  contents: read
+
+jobs:
+  collect:
+    name: Collect and verify public evidence
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - name: Check out immutable workflow source
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          repository: ${{ job.workflow_repository }}
+          ref: ${{ job.workflow_sha }}
+          path: _oss-maintainer-evidence
+          persist-credentials: false
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: _oss-maintainer-evidence/package-lock.json
+          package-manager-cache: false
+      - name: Install locked dependencies
+        working-directory: _oss-maintainer-evidence
+        run: npm ci
+      - name: Build CLI
+        working-directory: _oss-maintainer-evidence
+        run: npm run build
+      - name: Collect public evidence
+        working-directory: _oss-maintainer-evidence
+        env:
+          TARGET_REPOSITORY: ${{ inputs.repository }}
+          TARGET_MAINTAINER: ${{ inputs.maintainer }}
+          EVIDENCE_SINCE: ${{ inputs.since }}
+          MAX_ITEMS: ${{ inputs.max_items }}
+          REPORT_PATH: ${{ runner.temp }}/oss-evidence.json
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          status=0
+          set +e
+          node dist/cli.js collect "$TARGET_REPOSITORY" --maintainer "$TARGET_MAINTAINER" --since "$EVIDENCE_SINCE" --max-items "$MAX_ITEMS" --format json --output "$REPORT_PATH" || status=$?
+          set -e
+          case "$status" in
+            0|4) ;;
+            *) exit "$status" ;;
+          esac
+          test -s "$REPORT_PATH"
+      - name: Verify evidence signed out
+        env:
+          REPORT_PATH: ${{ runner.temp }}/oss-evidence.json
+          VERIFICATION_PATH: ${{ runner.temp }}/verification.txt
+          GH_TOKEN: ""
+          GITHUB_TOKEN: ""
+        run: |
+          set -o pipefail
+          node _oss-maintainer-evidence/dist/cli.js verify "$REPORT_PATH" 2>&1 | tee "$VERIFICATION_PATH"
+      - name: Upload evidence diagnostics
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: oss-maintainer-evidence
+          path: |
+            ${{ runner.temp }}/oss-evidence.json
+            ${{ runner.temp }}/verification.txt
+          if-no-files-found: warn
+          retention-days: 14

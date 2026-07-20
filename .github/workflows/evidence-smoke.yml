@@ -1,0 +1,21 @@
+name: Evidence Smoke
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 3 * * 1"
+
+permissions:
+  contents: read
+
+jobs:
+  evidence:
+    name: Verify the public integration path
+    permissions:
+      contents: read
+    uses: ./.github/workflows/collect-evidence.yml
+    with:
+      repository: kilmidas/oss-maintainer-evidence
+      maintainer: kilmidas
+      since: 90d
+      max_items: 200

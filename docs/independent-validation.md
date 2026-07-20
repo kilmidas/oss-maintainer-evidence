@@ -16,12 +16,23 @@ Completing this workflow does not demonstrate external adoption by itself. Parti
 Download the `.tgz` archive and matching `.sha256` file from [Releases](https://github.com/kilmidas/oss-maintainer-evidence/releases). From the download directory, verify and install it:
 
 ```sh
-shasum -a 256 -c oss-evidence-0.2.0.tgz.sha256
-npm install --global ./oss-evidence-0.2.0.tgz
+shasum -a 256 -c oss-evidence-0.3.0.tgz.sha256
+gh attestation verify oss-evidence-0.3.0.tgz \
+  --repo kilmidas/oss-maintainer-evidence \
+  --signer-workflow kilmidas/oss-maintainer-evidence/.github/workflows/release-artifacts.yml
+npm install --global ./oss-evidence-0.3.0.tgz
 oss-evidence --version
 ```
 
 Collection requires GitHub CLI authenticated to `github.com`. The tool uses that access only for fixed, read-only `GET` requests and accepts only public repositories.
+
+## Run from a public repository
+
+Instead of installing locally, a maintainer can call the [reusable workflow](https://github.com/kilmidas/oss-maintainer-evidence/blob/main/.github/workflows/collect-evidence.yml) from their own public repository. Pin the caller to the documented 40-character commit SHA rather than a branch or tag, grant only `contents: read`, pass no secrets, and supply the public repository and maintainer inputs.
+
+The caller's GitHub Actions run uploads an `oss-maintainer-evidence` artifact containing `oss-evidence.json` and `verification.txt`. Download and review both files before sharing them. The automatically supplied token is limited to collection; verification clears token environment variables and checks public links signed out.
+
+This path still uses only public GitHub.com data. A workflow run from this repository is a self-test, not independent validation. A run becomes independent feedback only when a separate maintainer chooses to execute it and reviews the result.
 
 ## Collect and verify
 
@@ -54,4 +65,3 @@ Check the report against the linked public GitHub pages:
 Open an [independent validation issue](https://github.com/kilmidas/oss-maintainer-evidence/issues/new?template=validation.yml) with the released version, outcome, accuracy notes, and workflow friction. Sharing the report is optional. A concise description of mismatches is enough, and you may replace repository and maintainer names with public placeholders when the exact identity is not useful to the report.
 
 The project will not count maintainer self-tests, release verification downloads, or unconfirmed references as external adoption. Any future public adopter listing requires separate, explicit consent.
-
