@@ -42,7 +42,7 @@ It always emits JSON so the signed-out verifier can validate the complete struct
 - `oss-evidence.json`
 - `verification.txt`
 
-The workflow and job both declare only `contents: read`. `actions/checkout` uses `repository: ${{ job.workflow_repository }}` and `ref: ${{ job.workflow_sha }}`, sets a fixed `_oss-maintainer-evidence` path, and disables persisted credentials. These job identity values refer to the reusable workflow definition rather than the caller. The caller repository is never checked out.
+The workflow and job both declare only `contents: read`, `issues: read`, and `pull-requests: read`. The latter two scopes are required for authenticated reads of issue details and pull-request reviews; all write access remains disabled. `actions/checkout` uses `repository: ${{ job.workflow_repository }}` and `ref: ${{ job.workflow_sha }}`, sets a fixed `_oss-maintainer-evidence` path, and disables persisted credentials. These job identity values refer to the reusable workflow definition rather than the caller. The caller repository is never checked out.
 
 The workflow declares and references no secret inputs. A caller may syntactically request inherited secrets, but the called workflow has no expression or environment mapping that can expose them. The caller's automatically scoped `${{ github.token }}` is mapped to `GH_TOKEN` only on the collection step; it is never printed. The verification step explicitly clears both `GH_TOKEN` and `GITHUB_TOKEN`, and the existing verifier uses unauthenticated native HTTP. The target remains subject to the CLI's public-repository preflight and fixed `gh api --hostname github.com` endpoint allowlist.
 
@@ -58,7 +58,7 @@ A manual and weekly scheduled workflow calls the reusable workflow for this repo
 
 Version `0.3.0` adds the workflow interface. The README will include:
 
-- a copyable reusable-workflow example pinned to the exact 40-character implementation commit SHA with a `# v0.3.0` comment, caller-side `contents: read`, and no secrets forwarding;
+- a copyable reusable-workflow example pinned to the exact 40-character implementation commit SHA with a `# v0.3.0` comment, caller-side read-only `contents`, `issues`, and `pull-requests` permissions, and no secrets forwarding;
 - an optional `@v0.3.0` convenience example labeled as less resistant to a moved tag and not the recommended security path;
 - a one-command `npm exec` convenience example pinned to the `v0.3.0` release archive, clearly labeled as not performing checksum or attestation verification automatically;
 - a verified installation path that downloads the exact archive and checksum with GitHub CLI, checks SHA-256, validates build provenance with `gh attestation verify`, and executes that local archive;
@@ -88,7 +88,7 @@ Tests will fail before implementation and then enforce:
 - no caller checkout, workflow secret declaration or reference, run-body input expression, or job-level token mapping appears;
 - malicious input samples containing quotes, newlines, spaces, and command-substitution text remain step environment data and cannot become workflow commands; policy tests enforce environment-only input interpolation and quoted shell arguments;
 - collection policy tests cover exit `0`, partial exit `4`, all other nonzero exits, missing output, verification failure with a retained log, and always-run artifact upload;
-- README and release documentation expose the no-install and reusable-workflow paths without making adoption claims; the recommended caller block uses an exact 40-character SHA, declares caller-side `contents: read`, forwards no secrets, and labels the SHA with `# v0.3.0`;
+- README and release documentation expose the no-install and reusable-workflow paths without making adoption claims; the recommended caller block uses an exact 40-character SHA, declares only the three required caller-side read permissions, forwards no secrets, and labels the SHA with `# v0.3.0`;
 - package metadata remains private;
 - `npm run check`, schema validation, dependency audit, license validation, and package verification pass.
 

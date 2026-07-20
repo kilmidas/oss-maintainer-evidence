@@ -47,7 +47,7 @@ assert.doesNotMatch(workflow, /\$\{\{\s*secrets\./);
 assert.doesNotMatch(runBodies, /\$\{\{\s*inputs\./);
 ```
 
-Also require `contents: read`, exactly one `GH_TOKEN: ${{ github.token }}` occurrence on the collection step, explicit empty `GH_TOKEN` and `GITHUB_TOKEN` on verification, every input expression only in the collection step's `env`, quoted shell variables, immediate exit capture, acceptance of only `0` and `4`, a nonempty report check, `pipefail`, `if: always()`, bounded retention, and no caller checkout path. Include hostile input samples containing spaces, quotes, a newline, and literal `$(command)` text in the test data; assert the workflow has no run-body input expression and that every shell use is a quoted environment variable. Match the collector block explicitly against this status truth table and exact shell structure:
+Also require only `contents: read`, `issues: read`, and `pull-requests: read`, exactly one `GH_TOKEN: ${{ github.token }}` occurrence on the collection step, explicit empty `GH_TOKEN` and `GITHUB_TOKEN` on verification, every input expression only in the collection step's `env`, quoted shell variables, immediate exit capture, acceptance of only `0` and `4`, a nonempty report check, `pipefail`, `if: always()`, bounded retention, and no caller checkout path. Include hostile input samples containing spaces, quotes, a newline, and literal `$(command)` text in the test data; assert the workflow has no run-body input expression and that every shell use is a quoted environment variable. Match the collector block explicitly against this status truth table and exact shell structure:
 
 ```yaml
 run: |
@@ -72,7 +72,7 @@ run: |
 
 - [ ] **Step 3: Add smoke workflow assertions**
 
-Require only `workflow_dispatch` and weekly `schedule` triggers, a local `uses: ./.github/workflows/collect-evidence.yml` call, `contents: read`, target `kilmidas/oss-maintainer-evidence`, maintainer `kilmidas`, and no secret forwarding.
+Require only `workflow_dispatch` and weekly `schedule` triggers, a local `uses: ./.github/workflows/collect-evidence.yml` call, the three required read permissions, target `kilmidas/oss-maintainer-evidence`, maintainer `kilmidas`, and no secret forwarding.
 
 - [ ] **Step 4: Run the focused test and observe the intended failure**
 
@@ -101,7 +101,7 @@ Expected: FAIL because both workflow files are absent.
 
 - [ ] **Step 1: Add the reusable workflow interface**
 
-Define required string inputs `repository` and `maintainer`, optional string `since` defaulting to `90d`, and optional number `max_items` defaulting to `200`. Declare read-only permissions at workflow and job levels.
+Define required string inputs `repository` and `maintainer`, optional string `since` defaulting to `90d`, and optional number `max_items` defaulting to `200`. Declare only `contents: read`, `issues: read`, and `pull-requests: read` at workflow and job levels.
 
 - [ ] **Step 2: Check out only the called workflow source**
 
@@ -170,7 +170,7 @@ Record the resulting 40-character SHA as `WORKFLOW_SHA`; do not amend this commi
 Require the README to contain:
 
 - `uses: kilmidas/oss-maintainer-evidence/.github/workflows/collect-evidence.yml@WORKFLOW_SHA # v0.3.0`;
-- caller-side `permissions:\n  contents: read` and no `secrets:` in the recommended block;
+- caller-side read-only `contents`, `issues`, and `pull-requests` permissions and no `secrets:` in the recommended block;
 - the exact `npm exec --yes --package=https://github.com/kilmidas/oss-maintainer-evidence/releases/download/v0.3.0/oss-evidence-0.3.0.tgz -- oss-evidence --version` convenience command;
 - `shasum -a 256 -c` and `gh attestation verify` in the verified path;
 - `npm exec --yes --package="$PWD/oss-evidence-0.3.0.tgz" -- oss-evidence --version` after checksum and attestation verification, with expected output `0.3.0`;

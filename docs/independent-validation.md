@@ -28,7 +28,7 @@ Collection requires GitHub CLI authenticated to `github.com`. The tool uses that
 
 ## Run from a public repository
 
-Instead of installing locally, a maintainer can call the [reusable workflow](https://github.com/kilmidas/oss-maintainer-evidence/blob/main/.github/workflows/collect-evidence.yml) from their own public repository. Pin the caller to the documented 40-character commit SHA rather than a branch or tag, grant only `contents: read`, pass no secrets, and supply the public repository and maintainer inputs.
+Instead of installing locally, a maintainer can call the [reusable workflow](https://github.com/kilmidas/oss-maintainer-evidence/blob/main/.github/workflows/collect-evidence.yml) from their own public repository. Pin the caller to the documented 40-character commit SHA rather than a branch or tag, grant only `contents: read`, `issues: read`, and `pull-requests: read`, pass no secrets, and supply the public repository and maintainer inputs. The issue and pull-request scopes are required for the corresponding read-only GitHub REST endpoints; no write permission is needed.
 
 The caller's GitHub Actions run uploads an `oss-maintainer-evidence` artifact containing `oss-evidence.json` and `verification.txt`. Download and review both files before sharing them. The automatically supplied token is limited to collection; verification clears token environment variables and checks public links signed out.
 

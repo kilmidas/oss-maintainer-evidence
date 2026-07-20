@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 
 const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const read = (path: string) => readFileSync(resolve(projectRoot, path), "utf8");
-const reusableWorkflowSha = "3a9aba7273decb55c455a925a3c06370f6213967";
+const reusableWorkflowSha = "ce87d5b38fc5ad66ffb42f2d687abcef0177b82b";
 
 const requiredFiles = [
   "README.md",
@@ -199,10 +199,14 @@ test("public documentation provides immutable and convenient workflow callers", 
 
   assert.ok(immutable, "immutable reusable workflow example");
   assert.match(immutable, /^permissions:\n {2}contents: read$/m);
+  assert.equal([...immutable.matchAll(/issues: read/g)].length, 2);
+  assert.equal([...immutable.matchAll(/pull-requests: read/g)].length, 2);
   assert.match(immutable, /repository: owner\/repository/);
   assert.match(immutable, /maintainer: username/);
   assert.doesNotMatch(immutable, /secrets:/);
   assert.ok(tagged, "tagged reusable workflow example");
+  assert.equal([...tagged.matchAll(/issues: read/g)].length, 2);
+  assert.equal([...tagged.matchAll(/pull-requests: read/g)].length, 2);
   assert.match(readme, /tag can be moved/i);
   assert.match(readme, /not the recommended security path/i);
   assert.match(readme, /caller repository[^\n]*runner usage/i);
