@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 
 const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const read = (path: string) => readFileSync(resolve(projectRoot, path), "utf8");
-const reusableWorkflowSha = "ce87d5b38fc5ad66ffb42f2d687abcef0177b82b";
+const reusableWorkflowSha = "64b5e58592d5cd6aa4012595682a9a51b76332bc";
 
 const requiredFiles = [
   "README.md",
@@ -66,6 +66,22 @@ test("documentation describes the signed-out verifier boundary", () => {
   assert.match(readme, /without (?:GitHub )?credentials/i);
   assert.match(readme, /\| `6` \|[^\n]+verification/i);
   assert.match(readme, /not published to the npm registry/i);
+});
+
+test("documentation describes server-only signed-out API recovery", () => {
+  const readme = read("README.md");
+  const architecture = read("docs/architecture.md");
+  const limitations = read("docs/limitations.md");
+
+  assert.match(readme, /HTTP 5xx[\s\S]+once without credentials/i);
+  assert.match(
+    readme,
+    /does not retry authentication, permission, or rate-limit/i,
+  );
+  assert.match(architecture, /same allowlisted public API GET[\s\S]+8 MiB/i);
+  assert.match(architecture, /no authorization or cookie header/i);
+  assert.match(limitations, /one signed-out recovery request/i);
+  assert.match(limitations, /Version `0\.3\.0`/);
 });
 
 test("documentation changelog starts with the package version", () => {

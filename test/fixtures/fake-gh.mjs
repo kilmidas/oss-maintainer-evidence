@@ -15,12 +15,12 @@ const reply = (status, body, exitCode = 0) => {
   }
 };
 
-if (mode === "required_failure") reply(500, { message: "failure" }, 1);
+if (mode === "required_failure") reply(403, { message: "failure" }, 1);
 else if (
   mode === "partial" &&
   url.pathname === "/repos/acme/demo/community/profile"
 )
-  reply(500, { message: "optional failure" }, 1);
+  reply(403, { message: "optional failure" }, 1);
 else if (url.pathname === "/repos/acme/demo")
   reply(200, {
     full_name: "acme/demo",
@@ -52,4 +52,4 @@ else if (url.pathname.startsWith("/repos/acme/demo/contents/"))
   reply(404, { message: "Not Found" }, 1);
 else if (url.pathname === "/repos/acme/demo/contributors") reply(204);
 else if (url.pathname === "/repos/acme/demo/issues/comments") reply(200, []);
-else reply(500, { message: "unexpected synthetic endpoint" }, 1);
+else reply(400, { message: "unexpected synthetic endpoint" }, 1);

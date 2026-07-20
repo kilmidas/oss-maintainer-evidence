@@ -1,9 +1,10 @@
-import { GhApiError, runGhApi } from "../process/gh-runner.js";
+import { GhApiError } from "../process/gh-runner.js";
 import type { BuiltEndpoint, EndpointContract } from "./contracts.js";
 import { buildEndpoint, ENDPOINTS } from "./endpoints.js";
+import { runPublicGitHubApi } from "./public-api-runner.js";
 import { repositorySchema, searchSchema } from "./schemas.js";
 
-type GhResponse = Awaited<ReturnType<typeof runGhApi>>;
+type GhResponse = Awaited<ReturnType<typeof runPublicGitHubApi>>;
 export interface ClientOptions {
   run?: (endpoint: BuiltEndpoint) => Promise<GhResponse>;
 }
@@ -87,7 +88,7 @@ const endpointFromUrl = (
 export class GithubClient {
   private readonly run: NonNullable<ClientOptions["run"]>;
   constructor(options: ClientOptions = {}) {
-    this.run = options.run ?? runGhApi;
+    this.run = options.run ?? runPublicGitHubApi;
   }
 
   async request(

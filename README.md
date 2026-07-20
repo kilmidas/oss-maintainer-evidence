@@ -20,7 +20,7 @@ gh auth login --hostname github.com
 gh auth status --hostname github.com
 ```
 
-The application invokes `gh api` with fixed, read-only `GET` requests. It never reads or prints a token value.
+The application invokes `gh api` with fixed, read-only `GET` requests. It never reads or prints a token value. If an authenticated GitHub API request returns HTTP 5xx, the collector retries that same allowlisted public GET once without credentials, cookies, or redirects. It does not retry authentication, permission, or rate-limit failures through this path.
 
 ## Install
 
@@ -121,7 +121,7 @@ jobs:
       contents: read
       issues: read
       pull-requests: read
-    uses: kilmidas/oss-maintainer-evidence/.github/workflows/collect-evidence.yml@ce87d5b38fc5ad66ffb42f2d687abcef0177b82b # v0.3.0
+    uses: kilmidas/oss-maintainer-evidence/.github/workflows/collect-evidence.yml@64b5e58592d5cd6aa4012595682a9a51b76332bc # v0.3.0
     with:
       repository: owner/repository
       maintainer: username
@@ -212,7 +212,7 @@ Reports can contain public usernames, titles, timestamps, and URLs. Review a rep
 
 ## Architecture and safety
 
-The CLI validates bounded input, builds collection requests from an endpoint allowlist, invokes GitHub CLI without a shell, validates every response, applies transparent attribution rules, and renders only after required collection succeeds. Verification has a separate signed-out HTTP boundary with fixed headers, redirects, timeouts, and concurrency. Optional endpoint gaps and pagination caps are recorded as limitations. See [architecture](docs/architecture.md) for the component boundaries.
+The CLI validates bounded input, builds collection requests from an endpoint allowlist, invokes GitHub CLI without a shell, validates every response, and applies transparent attribution rules. Its server-error recovery sends only the same public API GET with fixed non-secret headers, a timeout, an 8 MiB response cap, and no redirect following. Verification has a separate signed-out HTTP boundary with fixed headers, redirects, timeouts, and concurrency. Rendering occurs only after required collection succeeds, while optional endpoint gaps and pagination caps are recorded as limitations. See [architecture](docs/architecture.md) for the component boundaries.
 
 The command has no GitHub mutation path, makes no AI API call, and does not infer activity from commit email, repository permission, labels, or title text.
 

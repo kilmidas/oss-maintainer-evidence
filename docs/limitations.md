@@ -1,6 +1,6 @@
 # Known Limitations
 
-Version `0.2.0` is deliberately narrow so every reported item has a transparent public source.
+Version `0.3.0` is deliberately narrow so every reported item has a transparent public source.
 
 ## Collection scope
 
@@ -16,6 +16,7 @@ Version `0.2.0` is deliberately narrow so every reported item has a transparent 
 - Every paginated resource is bounded by `--max-items`; reaching the cap is recorded as truncation.
 - Optional community-profile, security-file, or contributor endpoints can be unavailable. The report records that uncertainty instead of treating it as zero or absent.
 - Contributor counts cover only the visible contributor response returned by the supported endpoint.
+- An authenticated HTTP 5xx response gets one signed-out recovery request for the same allowlisted public API GET. The fallback has unauthenticated GitHub rate limits and does not apply to authentication, permission, or rate-limit failures.
 
 ## Interpretation
 
@@ -31,5 +32,5 @@ Review public usernames, titles, timestamps, and URLs before publishing a report
 
 - Verification accepts only schema-version 1.0 JSON reports and public `https://github.com` evidence URLs. It does not parse Markdown, use authentication, or support private, enterprise, or arbitrary web targets.
 - A successful check means the URL returned HTTP 200 through 299 at that moment without supplied credentials. It does not prove permanent availability, content correctness, reviewer acceptance, or ownership.
-- Rate limiting, transient network failures, GitHub outages, or a later link change can produce a failed result. Version 0.2.0 does not retry.
+- Rate limiting, transient network failures, GitHub outages, or a later link change can produce a failed result. Link verification in Version `0.3.0` does not retry.
 - Input is limited to 5 MiB and 2,000 unique HTTP targets. Requests use eight workers, a ten-second timeout per request, and at most five canonical same-host redirects.
