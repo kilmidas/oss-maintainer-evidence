@@ -8,6 +8,7 @@ All notable changes to this project are documented in this file. The format foll
 
 - A reusable read-only GitHub workflow collects and verifies public maintainer evidence without checking out caller code.
 - The recommended caller pins the workflow to an immutable commit and forwards no user-managed secrets.
+- The caller grants only the read-only `contents`, `issues`, and `pull-requests` token permissions required by the queried public endpoints.
 - A scheduled and manual self-smoke checks integration health without representing the run as external adoption.
 
 ### Documentation

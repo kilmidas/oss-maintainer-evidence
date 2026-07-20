@@ -199,10 +199,14 @@ test("public documentation provides immutable and convenient workflow callers", 
 
   assert.ok(immutable, "immutable reusable workflow example");
   assert.match(immutable, /^permissions:\n {2}contents: read$/m);
+  assert.equal([...immutable.matchAll(/issues: read/g)].length, 2);
+  assert.equal([...immutable.matchAll(/pull-requests: read/g)].length, 2);
   assert.match(immutable, /repository: owner\/repository/);
   assert.match(immutable, /maintainer: username/);
   assert.doesNotMatch(immutable, /secrets:/);
   assert.ok(tagged, "tagged reusable workflow example");
+  assert.equal([...tagged.matchAll(/issues: read/g)].length, 2);
+  assert.equal([...tagged.matchAll(/pull-requests: read/g)].length, 2);
   assert.match(readme, /tag can be moved/i);
   assert.match(readme, /not the recommended security path/i);
   assert.match(readme, /caller repository[^\n]*runner usage/i);

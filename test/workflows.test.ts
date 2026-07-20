@@ -139,10 +139,13 @@ test("reusable evidence workflow checks out only its immutable definition source
     "Check out immutable workflow source",
   );
   assert.match(workflow, /^on:\n {2}workflow_call:/m);
-  assert.match(workflow, /^permissions:\n {2}contents: read$/m);
   assert.match(
     workflow,
-    /jobs:\n {2}collect:\n(?:.|\n)*?permissions:\n {6}contents: read/,
+    /^permissions:\n {2}contents: read\n {2}issues: read\n {2}pull-requests: read$/m,
+  );
+  assert.match(
+    workflow,
+    /jobs:\n {2}collect:\n(?:.|\n)*?permissions:\n {6}contents: read\n {6}issues: read\n {6}pull-requests: read/,
   );
   assert.equal(count(workflow, `uses: ${pinnedActions.checkout}`), 1);
   assert.ok(workflow.includes(pinnedActions.setupNode));
@@ -304,7 +307,14 @@ test("reusable evidence verification retains failure output and upload diagnosti
 
 test("evidence smoke calls only the local reusable workflow on bounded triggers", () => {
   const workflow = readWorkflow("evidence-smoke.yml");
-  assert.match(workflow, /^permissions:\n {2}contents: read$/m);
+  assert.match(
+    workflow,
+    /^permissions:\n {2}contents: read\n {2}issues: read\n {2}pull-requests: read$/m,
+  );
+  assert.match(
+    workflow,
+    /jobs:\n {2}evidence:\n(?:.|\n)*?permissions:\n {6}contents: read\n {6}issues: read\n {6}pull-requests: read/,
+  );
   assert.match(workflow, /^on:\n {2}workflow_dispatch:/m);
   assert.match(workflow, /\n {2}schedule:\n {4}- cron: "[^"]+"/);
   assert.doesNotMatch(

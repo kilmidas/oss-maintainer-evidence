@@ -24,6 +24,8 @@ on:
 
 permissions:
   contents: read
+  issues: read
+  pull-requests: read
 
 jobs:
   collect:
@@ -32,6 +34,8 @@ jobs:
     timeout-minutes: 20
     permissions:
       contents: read
+      issues: read
+      pull-requests: read
     steps:
       - name: Check out immutable workflow source
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0

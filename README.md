@@ -112,11 +112,15 @@ on:
 
 permissions:
   contents: read
+  issues: read
+  pull-requests: read
 
 jobs:
   evidence:
     permissions:
       contents: read
+      issues: read
+      pull-requests: read
     uses: kilmidas/oss-maintainer-evidence/.github/workflows/collect-evidence.yml@3a9aba7273decb55c455a925a3c06370f6213967 # v0.3.0
     with:
       repository: owner/repository
@@ -125,7 +129,7 @@ jobs:
       max_items: 200
 ```
 
-The caller repository supplies its read-only GitHub token and pays the GitHub Actions runner usage. The called workflow checks out only its own immutable source, collects public data, verifies the report without authentication, and uploads an `oss-maintainer-evidence` artifact.
+The caller repository supplies a read-only GitHub token with `contents`, `issues`, and `pull-requests` access and pays the GitHub Actions runner usage. These are the minimum token categories used by the repository, issue, and pull-request review endpoints; no write permission or user-managed secret is required. The called workflow checks out only its own immutable source, collects public data, verifies the report without authentication, and uploads an `oss-maintainer-evidence` artifact.
 
 The following tag-based caller is shorter, but a tag can be moved. It is a convenience form and not the recommended security path:
 
@@ -137,11 +141,15 @@ on:
 
 permissions:
   contents: read
+  issues: read
+  pull-requests: read
 
 jobs:
   evidence:
     permissions:
       contents: read
+      issues: read
+      pull-requests: read
     uses: kilmidas/oss-maintainer-evidence/.github/workflows/collect-evidence.yml@v0.3.0
     with:
       repository: owner/repository

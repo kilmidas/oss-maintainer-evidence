@@ -7,12 +7,16 @@ on:
 
 permissions:
   contents: read
+  issues: read
+  pull-requests: read
 
 jobs:
   evidence:
     name: Verify the public integration path
     permissions:
       contents: read
+      issues: read
+      pull-requests: read
     uses: ./.github/workflows/collect-evidence.yml
     with:
       repository: kilmidas/oss-maintainer-evidence

@@ -16,7 +16,7 @@ Use this checklist from the exact commit proposed for release. The package remai
 - [ ] Open every example evidence URL without authentication and require a successful response.
 - [ ] Run `oss-evidence verify` on the example JSON report without passing credentials, cookies, GitHub CLI state, or browser state.
 - [ ] Inspect the candidate diff and repository secret-scanning alerts; do not publish if any credential or private application data appears.
-- [ ] Confirm the reusable workflow checks out `job.workflow_repository` at `job.workflow_sha`, never caller code, and grants only `contents: read`.
+- [ ] Confirm the reusable workflow checks out `job.workflow_repository` at `job.workflow_sha`, never caller code, and grants only `contents: read`, `issues: read`, and `pull-requests: read`.
 - [ ] Confirm the recommended caller documentation pins the reviewed immutable commit and forwards no secrets.
 
 ## Attested artifact
