@@ -21,7 +21,7 @@ const report = (partial = false) =>
       owner: "acme",
       name: "demo",
       fullName: "acme/demo",
-      description: "<script>alert(1)</script> | # injected\nheading",
+      description: "<SCRIPT>alert(1)</SCRIPT> | # injected\nheading",
       sourceUrl: "https://github.com/acme/demo",
       observedAt: "2025-01-01T00:00:00.000Z",
     },
@@ -33,7 +33,7 @@ const report = (partial = false) =>
           actor: "Alice",
           occurredAt: "2024-06-01T00:00:00.000Z",
           url: "https://github.com/acme/demo/releases/tag/v1",
-          title: "[unsafe](javascript:alert(1)) | <b>v1</b>\n# heading",
+          title: "[unsafe](javascript:alert(1)) | <B>v1</B>\n# heading",
           attributionRule: "release author",
         },
       ],
@@ -140,7 +140,7 @@ test("renders eight stable safe Markdown sections", () => {
   const output = renderMarkdown(report());
   for (let number = 1; number <= 8; number++)
     assert.match(output, new RegExp(`^## ${number}\\. `, "m"));
-  assert.doesNotMatch(output, /<script>|<b>|^# injected|\]\(javascript:/m);
+  assert.doesNotMatch(output, /<script>|<b>|^# injected|\]\(javascript:/im);
   assert.match(output, /No authored pull requests found/);
   assert.match(output, /Counts below are calculated/);
   assert.match(output, /https:\/\/github\.com\/acme\/demo\/releases\/tag\/v1/);
