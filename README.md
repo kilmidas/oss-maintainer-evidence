@@ -117,7 +117,7 @@ jobs:
   evidence:
     permissions:
       contents: read
-    uses: kilmidas/oss-maintainer-evidence/.github/workflows/collect-evidence.yml@34c9dbe7f19cdb5072b9a10d84f9b5aed1e63fd7 # v0.3.0
+    uses: kilmidas/oss-maintainer-evidence/.github/workflows/collect-evidence.yml@3a9aba7273decb55c455a925a3c06370f6213967 # v0.3.0
     with:
       repository: owner/repository
       maintainer: username
