@@ -33,9 +33,10 @@ Use this checklist from the exact commit proposed for release. The package remai
 ## Publish and recover
 
 - [ ] Publish the GitHub release only after every earlier check passes; do not publish to npm.
-- [ ] Attach only the verified workflow archive and checksum.
+- [ ] Attach the verified workflow archive and checksum before adding any post-release evidence assets.
 - [ ] Download the public assets again, repeat checksum and provenance verification, and smoke-test the public archive.
 - [ ] Run `Evidence Smoke` manually on `main`, require success, and inspect its `oss-maintainer-evidence` artifact.
+- [ ] Inspect the public-only evidence report and signed-out verification record for private data, then attach only those reviewed files as optional release evidence.
 - [ ] Record that the scheduled self-smoke checks integration health only and is not independent adoption or endorsement.
 - [ ] Verify the repository, release, security policy, example reports, license, and passing CI links without relying on private credentials.
 - [ ] If verification fails before publication, do not create the release; fix through a reviewed pull request and create a new frozen commit.

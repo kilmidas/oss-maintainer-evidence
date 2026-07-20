@@ -267,6 +267,14 @@ test("validation and release docs preserve honest workflow interpretation", () =
   assert.match(checklist, /reusable workflow/i);
   assert.match(checklist, /Evidence Smoke/);
   assert.match(checklist, /gh attestation verify/);
+  assert.match(
+    checklist,
+    /public-only evidence report[^\n]*signed-out verification record/i,
+  );
+  assert.doesNotMatch(
+    checklist,
+    /Attach only the verified workflow archive and checksum/i,
+  );
   assert.match(changelog, /## \[0\.3\.0]/);
   assert.match(changelog, /immutable commit/i);
   assert.match(changelog, /self-smoke/i);
@@ -287,10 +295,10 @@ test("the standard check validates the committed ecosystem ledger", () => {
   assert.match(scripts.check, /npm run evidence:check/);
 });
 
-test("latest public example records and links the v0.2.0 maintenance release", () => {
+test("latest public example records and links the v0.3.0 maintenance release", () => {
   const readme = read("README.md");
   const report = JSON.parse(
-    read("examples/oss-maintainer-evidence-v0.2.0.json"),
+    read("examples/oss-maintainer-evidence-v0.3.0.json"),
   ) as {
     status: string;
     summary: { releases: number };
@@ -304,19 +312,20 @@ test("latest public example records and links the v0.2.0 maintenance release", (
     activities: { releases: Array<{ url: string }> };
   };
 
-  assert.match(readme, /examples\/oss-maintainer-evidence-v0\.2\.0\.json/);
+  assert.match(readme, /examples\/oss-maintainer-evidence-v0\.3\.0\.md/);
+  assert.match(readme, /examples\/oss-maintainer-evidence-v0\.3\.0\.json/);
   assert.equal(report.status, "complete");
-  assert.equal(report.summary.releases, 2);
+  assert.equal(report.summary.releases, 3);
   assert.equal(report.adoption.stars, 0);
   assert.equal(report.adoption.forks, 0);
   assert.equal(report.adoption.watchers, 0);
-  assert.equal(report.adoption.contributors, 1);
+  assert.equal(report.adoption.contributors, 2);
   assert.match(report.adoption.observedAt, /Z$/);
   assert.ok(
     report.activities.releases.some(
       ({ url }) =>
         url ===
-        "https://github.com/kilmidas/oss-maintainer-evidence/releases/tag/v0.2.0",
+        "https://github.com/kilmidas/oss-maintainer-evidence/releases/tag/v0.3.0",
     ),
   );
 });
