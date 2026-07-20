@@ -134,19 +134,24 @@ test("workflow release artifacts are tag-triggered, attested, and not published"
 
 test("reusable evidence workflow checks out only its immutable definition source", () => {
   const workflow = readWorkflow("collect-evidence.yml");
+  const checkout = workflowStep(
+    workflow,
+    "Check out immutable workflow source",
+  );
   assert.match(workflow, /^on:\n {2}workflow_call:/m);
   assert.match(workflow, /^permissions:\n {2}contents: read$/m);
   assert.match(
     workflow,
     /jobs:\n {2}collect:\n(?:.|\n)*?permissions:\n {6}contents: read/,
   );
-  assert.ok(workflow.includes(pinnedActions.checkout));
+  assert.equal(count(workflow, `uses: ${pinnedActions.checkout}`), 1);
   assert.ok(workflow.includes(pinnedActions.setupNode));
   assert.ok(workflow.includes(pinnedActions.uploadArtifact));
-  assert.match(workflow, /repository: \$\{\{ job\.workflow_repository \}\}/);
-  assert.match(workflow, /ref: \$\{\{ job\.workflow_sha \}\}/);
-  assert.match(workflow, /path: _oss-maintainer-evidence/);
-  assert.match(workflow, /persist-credentials: false/);
+  assert.match(checkout, new RegExp(`uses: ${pinnedActions.checkout}`));
+  assert.match(checkout, /repository: \$\{\{ job\.workflow_repository \}\}/);
+  assert.match(checkout, /ref: \$\{\{ job\.workflow_sha \}\}/);
+  assert.match(checkout, /path: _oss-maintainer-evidence/);
+  assert.match(checkout, /persist-credentials: false/);
   assert.doesNotMatch(workflow, /repository: \$\{\{ github\.repository \}\}/);
   assert.doesNotMatch(workflow, /\n\s+secrets:/);
   assert.doesNotMatch(workflow, /\$\{\{\s*secrets\./);
@@ -162,7 +167,10 @@ test("reusable evidence workflow scopes inputs and authentication to collection"
     "Verify evidence signed out",
   );
 
-  assert.equal(count(workflow, `GH_TOKEN: \${{ github.token }}`), 1);
+  assert.equal(
+    [...workflow.matchAll(/\$\{\{\s*github\.token\s*\}\}/g)].length,
+    1,
+  );
   assert.match(collection, /GH_TOKEN: \$\{\{ github\.token \}\}/);
   assert.match(collection, /TARGET_REPOSITORY: \$\{\{ inputs\.repository \}\}/);
   assert.match(collection, /TARGET_MAINTAINER: \$\{\{ inputs\.maintainer \}\}/);
