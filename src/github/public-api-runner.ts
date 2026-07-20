@@ -136,7 +136,8 @@ export async function runSignedOutGitHubApi(
     }
     if (status === 401 || status === 403) {
       const category =
-        response.headers.get("x-ratelimit-remaining") === "0"
+        response.headers.get("x-ratelimit-remaining") === "0" ||
+        response.headers.get("retry-after") !== null
           ? "rate_limit"
           : "auth";
       await cancelBody(response);

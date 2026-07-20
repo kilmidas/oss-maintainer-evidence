@@ -74,6 +74,27 @@ test("signed-out fallback preserves expected absence semantics", async () => {
   });
 });
 
+test("signed-out fallback recognizes secondary rate-limit responses", async () => {
+  const endpoint = buildEndpoint(ENDPOINTS.repository, {
+    owner: "octo",
+    repo: "hello",
+  });
+  await assert.rejects(
+    runSignedOutGitHubApi(endpoint, {
+      fetcher: async () =>
+        new Response("{}", {
+          status: 403,
+          headers: {
+            "retry-after": "60",
+            "x-ratelimit-remaining": "42",
+          },
+        }),
+    }),
+    (error: unknown) =>
+      error instanceof GhApiError && error.category === "rate_limit",
+  );
+});
+
 test("public runner falls back only for server failures", async () => {
   const endpoint = buildEndpoint(ENDPOINTS.repository, {
     owner: "octo",
