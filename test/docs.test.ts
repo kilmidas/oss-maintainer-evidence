@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 
 const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const read = (path: string) => readFileSync(resolve(projectRoot, path), "utf8");
-const reusableWorkflowSha = "55657a39a55722725208543072554cb6ee7ea517";
+const reusableWorkflowSha = "64b5e58592d5cd6aa4012595682a9a51b76332bc";
 
 const requiredFiles = [
   "README.md",
