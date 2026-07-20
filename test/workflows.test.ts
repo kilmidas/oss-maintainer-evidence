@@ -23,6 +23,7 @@ const readWorkflow = (name: string) =>
     : "";
 const workflowNames = [
   "ci.yml",
+  "codeql.yml",
   "collect-evidence.yml",
   "dependency-review.yml",
   "evidence-smoke.yml",
@@ -30,6 +31,8 @@ const workflowNames = [
 ] as const;
 const localEvidenceWorkflow =
   "./.github/workflows/collect-evidence.yml" as const;
+const immutableActionReference =
+  /^[a-z0-9_.-]+\/[a-z0-9_.-]+(?:\/[a-z0-9_.-]+)*@[0-9a-f]{40}$/;
 const pinnedActions = {
   checkout: "actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0",
   setupNode: "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
@@ -39,6 +42,10 @@ const pinnedActions = {
     "actions/attest-build-provenance@0f67c3f4856b2e3261c31976d6725780e5e4c373",
   uploadArtifact:
     "actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
+  codeqlInit:
+    "github/codeql-action/init@7188fc363630916deb702c7fdcf4e481b751f97a",
+  codeqlAnalyze:
+    "github/codeql-action/analyze@7188fc363630916deb702c7fdcf4e481b751f97a",
 } as const;
 
 test("workflow policy includes required automation files", () => {
@@ -83,10 +90,17 @@ test("workflow actions are pinned to immutable commits", () => {
       if (action[1] === localEvidenceWorkflow) continue;
       assert.match(
         action[1],
-        /^[a-z0-9_.-]+\/[a-z0-9_.-]+@[0-9a-f]{40}$/,
+        immutableActionReference,
         `${name}: ${action[1]}`,
       );
     }
+  }
+  for (const movableReference of [
+    "github/codeql-action/init@v4",
+    "github/codeql-action/analyze@main",
+    "github/codeql-action/init@7188fc3",
+  ]) {
+    assert.doesNotMatch(movableReference, immutableActionReference);
   }
 });
 
@@ -115,6 +129,35 @@ test("workflow dependency review runs only for pull requests with official actio
   assert.doesNotMatch(workflow, /\n {2}push:/);
   assert.ok(workflow.includes(pinnedActions.checkout));
   assert.ok(workflow.includes(pinnedActions.dependencyReview));
+});
+
+test("workflow CodeQL scan is bounded, least-privilege, and source-only", () => {
+  const workflow = readWorkflow("codeql.yml");
+  assert.match(workflow, /^name: CodeQL$/m);
+  assert.match(workflow, /push:\n {4}branches:\n {6}- main/);
+  assert.match(workflow, /pull_request:\n {4}branches:\n {6}- main/);
+  assert.match(workflow, /schedule:\n {4}- cron: "[0-9* ,/-]+"/);
+  assert.match(workflow, /^permissions:\n {2}contents: read$/m);
+  assert.match(
+    workflow,
+    /jobs:\n {2}analyze:\n(?:.|\n)*?permissions:\n {6}contents: read\n {6}security-events: write\n {4}steps:/,
+  );
+  assert.match(workflow, /timeout-minutes: 20/);
+  assert.equal(count(workflow, `uses: ${pinnedActions.checkout}`), 1);
+  assert.equal(count(workflow, `uses: ${pinnedActions.codeqlInit}`), 1);
+  assert.equal(count(workflow, `uses: ${pinnedActions.codeqlAnalyze}`), 1);
+  assert.match(
+    workflowStep(workflow, "Initialize CodeQL"),
+    /languages: javascript-typescript\n {10}build-mode: none/,
+  );
+  assert.match(
+    workflowStep(workflow, "Analyze source"),
+    /category: "\/language:javascript-typescript"/,
+  );
+  assert.doesNotMatch(
+    workflow,
+    /pull_request_target|workflow_dispatch|\n\s+run:|\$\{\{\s*secrets|id-token:|packages:|actions:|contents: write/,
+  );
 });
 
 test("workflow release artifacts are tag-triggered, attested, and not published", () => {
