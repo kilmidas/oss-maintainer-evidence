@@ -54,6 +54,18 @@ test("documentation README contains the exact current command help", () => {
   );
 });
 
+test("documentation README exposes current public project health links", () => {
+  const readme = read("README.md");
+  for (const badge of [
+    "[![CI](https://github.com/kilmidas/oss-maintainer-evidence/actions/workflows/ci.yml/badge.svg)](https://github.com/kilmidas/oss-maintainer-evidence/actions/workflows/ci.yml)",
+    "[![CodeQL](https://github.com/kilmidas/oss-maintainer-evidence/actions/workflows/codeql.yml/badge.svg)](https://github.com/kilmidas/oss-maintainer-evidence/actions/workflows/codeql.yml)",
+    "[![Release](https://img.shields.io/github/v/release/kilmidas/oss-maintainer-evidence)](https://github.com/kilmidas/oss-maintainer-evidence/releases/latest)",
+    "[![License](https://img.shields.io/github/license/kilmidas/oss-maintainer-evidence)](https://github.com/kilmidas/oss-maintainer-evidence/blob/main/LICENSE)",
+  ]) {
+    assert.ok(readme.includes(badge), badge);
+  }
+});
+
 test("documentation describes the signed-out verifier boundary", () => {
   const packageMetadata = JSON.parse(read("package.json")) as {
     version: string;

@@ -1,5 +1,10 @@
 # OSS Maintainer Evidence
 
+[![CI](https://github.com/kilmidas/oss-maintainer-evidence/actions/workflows/ci.yml/badge.svg)](https://github.com/kilmidas/oss-maintainer-evidence/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/kilmidas/oss-maintainer-evidence/actions/workflows/codeql.yml/badge.svg)](https://github.com/kilmidas/oss-maintainer-evidence/actions/workflows/codeql.yml)
+[![Release](https://img.shields.io/github/v/release/kilmidas/oss-maintainer-evidence)](https://github.com/kilmidas/oss-maintainer-evidence/releases/latest)
+[![License](https://img.shields.io/github/license/kilmidas/oss-maintainer-evidence)](https://github.com/kilmidas/oss-maintainer-evidence/blob/main/LICENSE)
+
 OSS Maintainer Evidence is a local, read-only command-line tool that turns public GitHub maintenance activity into a source-linked Markdown or JSON report. It records releases, pull request work, reviews, issue work, community files, and observable adoption signals for one maintainer and one repository.
 
 The report is evidence, not a verdict. The tool does not score or decide grant or program eligibility, and it does not predict whether an application will be accepted.
